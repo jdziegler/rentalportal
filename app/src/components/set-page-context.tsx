@@ -5,13 +5,15 @@ import { useSetPageContext } from "@/lib/ai/page-context";
 
 /**
  * Drop this into any page to tell the AI chatbot what the user is viewing.
- * Server components can render this with a context string prop.
+ *
+ * @param label - Short label shown in chat widget (e.g. "/Dashboard", "/John Smith")
+ * @param context - Detailed description sent to the AI agent
  */
-export function SetPageContext({ context }: { context: string }) {
-  const setContext = useSetPageContext();
+export function SetPageContext({ label, context }: { label: string; context: string }) {
+  const setData = useSetPageContext();
   useEffect(() => {
-    setContext(context);
-    return () => setContext("");
-  }, [context, setContext]);
+    setData({ label, description: context });
+    return () => setData(null);
+  }, [label, context, setData]);
   return null;
 }

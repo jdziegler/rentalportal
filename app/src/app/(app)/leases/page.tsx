@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SetPageContext } from "@/components/set-page-context";
 
 const leaseStatusLabels: Record<number, string> = {
   0: "Active",
@@ -32,6 +33,7 @@ export default async function LeasesPage() {
 
   return (
     <div>
+      <SetPageContext label="/Leases" context={`Leases list: ${leases.length} leases. User can see property/unit, tenant name, start/end dates, rent amount, and status.`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Leases</h1>
         <Button asChild>

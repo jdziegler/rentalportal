@@ -63,7 +63,7 @@ export default async function PropertyDetailPage({
 
   return (
     <div>
-      <SetPageContext context={`Property detail: "${property.name}" at ${property.address}, ${property.city}, ${property.state} ${property.zip}. ${totalUnits} units, ${occupancyRate}% occupied, $${totalRent.toLocaleString()}/mo total rent. Property ID: ${property.id}. Unit details, transactions, and listings visible on screen.`} />
+      <SetPageContext label={`/${property.name}`} context={`Property detail: "${property.name}" at ${property.address}, ${property.city}, ${property.state} ${property.zip}. ${totalUnits} units, ${occupancyRate}% occupied, $${totalRent.toLocaleString()}/mo total rent. Property ID: ${property.id}. Unit details, transactions, and listings visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>

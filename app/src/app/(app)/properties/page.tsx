@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SetPageContext } from "@/components/set-page-context";
 
 const propertyTypes: Record<number, string> = {
   1: "Single Family",
@@ -26,6 +27,7 @@ export default async function PropertiesPage() {
 
   return (
     <div>
+      <SetPageContext label="/Properties" context={`Properties list: ${properties.length} properties. User can see property names, addresses, types, unit counts, and occupancy rates.`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
         <Button asChild>

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePageContext } from "@/lib/ai/page-context";
+import { usePageContext, type PageContextData } from "@/lib/ai/page-context";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -36,7 +36,7 @@ function saveHistory(storageKey: string, messages: ChatMessage[]) {
 }
 
 export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) {
-  const pageContext = usePageContext();
+  const pageContextData: PageContextData | null = usePageContext();
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [collapsed, setCollapsed] = useState(true);
@@ -91,7 +91,7 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
-          context: pageContext || undefined,
+          context: pageContextData?.description || undefined,
           channel: "web",
         }),
       });
@@ -128,7 +128,7 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, storageKey, pageContext, collapsed, router]);
+  }, [input, loading, messages, storageKey, pageContextData, collapsed, router]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
@@ -147,8 +147,13 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
           {/* Header */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
             <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-            <span className="text-sm font-semibold text-gray-900 flex-1">
+            <span className="text-sm font-semibold text-gray-900 flex-1 flex items-center gap-2">
               PropertyPilot AI
+              {pageContextData?.label && (
+                <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md truncate max-w-[140px]">
+                  {pageContextData.label}
+                </span>
+              )}
             </span>
             {messages.length > 0 && (
               <button

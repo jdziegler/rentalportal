@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { TransactionFilters } from "@/components/transaction-filters";
 import { Pagination } from "@/components/pagination";
 import { TRANSACTION_STATUS, statusLabels, statusStyles } from "@/lib/transaction-status";
+import { SetPageContext } from "@/components/set-page-context";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
@@ -158,6 +159,7 @@ export default async function TransactionsPage({
 
   return (
     <div>
+      <SetPageContext label="/Transactions" context={`Transactions list: ${transactions.length} shown (page ${page}). Paid: $${totalPaid.toLocaleString()}, Outstanding: $${totalOutstanding.toLocaleString()}, Overdue: $${totalOverdue.toLocaleString()}. User can see date, details, property, tenant, status, amount, and balance.`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
         <Button asChild>

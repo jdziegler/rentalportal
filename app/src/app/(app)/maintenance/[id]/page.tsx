@@ -60,7 +60,7 @@ export default async function MaintenanceDetailPage({
 
   return (
     <div>
-      <SetPageContext context={`Maintenance request: "${request.title}" — ${statusLabels[request.status]} [${priorityLabels[request.priority]}]. ${request.category ? `Category: ${request.category}.` : ""} Property: ${request.property.name}${request.unit ? `, Unit: ${request.unit.name}` : ""}. ${request.contact ? `Reported by: ${request.contact.firstName} ${request.contact.lastName}.` : ""} Opened: ${request.createdAt.toISOString().split("T")[0]}. Request ID: ${request.id}. Full details visible on screen.`} />
+      <SetPageContext label={`/${request.title}`} context={`Maintenance request: "${request.title}" — ${statusLabels[request.status]} [${priorityLabels[request.priority]}]. ${request.category ? `Category: ${request.category}.` : ""} Property: ${request.property.name}${request.unit ? `, Unit: ${request.unit.name}` : ""}. ${request.contact ? `Reported by: ${request.contact.firstName} ${request.contact.lastName}.` : ""} Opened: ${request.createdAt.toISOString().split("T")[0]}. Request ID: ${request.id}. Full details visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>

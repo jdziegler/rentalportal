@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SetPageContext } from "@/components/set-page-context";
 
 const unitTypes: Record<number, string> = {
   1: "Apartment",
@@ -23,6 +24,7 @@ export default async function UnitsPage() {
 
   return (
     <div>
+      <SetPageContext label="/Units" context={`Units list: ${units.length} units. User can see unit names, properties, bed/bath counts, rent prices, and occupancy status.`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Units</h1>
         <Button asChild>

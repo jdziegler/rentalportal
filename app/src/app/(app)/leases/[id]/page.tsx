@@ -73,7 +73,7 @@ export default async function LeaseDetailPage({
 
   return (
     <div>
-      <SetPageContext context={`Lease detail: "${leaseName}" — ${leaseStatusLabel}. Tenant: ${tenantName} (ID: ${lease.contact.id}). Property: ${propertyName}, Unit: ${unitName}. Rent: $${Number(lease.rentAmount).toLocaleString()}/mo, due day ${lease.rentDueDay}, grace ${lease.gracePeriod} days. Period: ${lease.rentFrom.toISOString().split("T")[0]} to ${lease.rentTo ? lease.rentTo.toISOString().split("T")[0] : "month-to-month"}. Lease ID: ${lease.id}. Full details and recent transactions visible on screen.`} />
+      <SetPageContext label={`/${leaseName}`} context={`Lease detail: "${leaseName}" — ${leaseStatusLabel}. Tenant: ${tenantName} (ID: ${lease.contact.id}). Property: ${propertyName}, Unit: ${unitName}. Rent: $${Number(lease.rentAmount).toLocaleString()}/mo, due day ${lease.rentDueDay}, grace ${lease.gracePeriod} days. Period: ${lease.rentFrom.toISOString().split("T")[0]} to ${lease.rentTo ? lease.rentTo.toISOString().split("T")[0] : "month-to-month"}. Lease ID: ${lease.id}. Full details and recent transactions visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>

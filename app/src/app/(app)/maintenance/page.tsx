@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SetPageContext } from "@/components/set-page-context";
 
 const priorityLabels: Record<number, string> = {
   0: "Low",
@@ -52,6 +53,7 @@ export default async function MaintenancePage() {
 
   return (
     <div>
+      <SetPageContext label="/Maintenance" context={`Maintenance list: ${requests.length} total requests. ${openCount} open, ${inProgressCount} in progress. User can see title, property/unit, priority, status, reporter, and date.`} />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Maintenance</h1>
