@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
       transactionId: transaction.id,
       type: "tenant_payment",
     },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 
   return NextResponse.json({ checkoutUrl: checkoutSession.url });

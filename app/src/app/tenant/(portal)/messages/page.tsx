@@ -79,7 +79,6 @@ export default async function TenantMessagesPage() {
     <MessagesClient
       messages={serializedMessages}
       leases={serializedLeases}
-      contactIds={contactIds}
     />
   );
 }

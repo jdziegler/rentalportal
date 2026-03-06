@@ -26,9 +26,5 @@ export const PLANS = {
 
 export type PlanKey = keyof typeof PLANS;
 
-// Stripe Connect fee settings
-export const CONNECT_FEES = {
-  ach: 195, // $1.95 flat fee in cents
-  card_percent: 3.5, // 3.5%
-  card_fixed: 30, // $0.30 in cents
-};
+// Re-export fees for convenience
+export { CONNECT_FEES } from "./fees";

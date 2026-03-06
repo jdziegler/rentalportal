@@ -47,19 +47,20 @@ export default function PayRentClient({
   const [payingId, setPayingId] = useState<string | null>(null);
   const [payingAmount, setPayingAmount] = useState(0);
   const [showMethodPicker, setShowMethodPicker] = useState(false);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const paymentParam = searchParams.get("payment");
+  const [error, setError] = useState(
+    paymentParam === "cancelled" ? "Payment was cancelled." : ""
+  );
+  const successMsg =
+    paymentParam === "success"
+      ? "Payment submitted successfully! It may take a moment to process."
+      : "";
 
   useEffect(() => {
-    const payment = searchParams.get("payment");
-    if (payment === "success") {
-      setSuccessMsg("Payment submitted successfully! It may take a moment to process.");
-      window.history.replaceState({}, "", "/tenant/portal");
-    } else if (payment === "cancelled") {
-      setError("Payment was cancelled.");
+    if (paymentParam) {
       window.history.replaceState({}, "", "/tenant/portal");
     }
-  }, [searchParams]);
+  }, [paymentParam]);
 
   const currentLease = leases.find((l) => l.id === selectedLease);
   const leaseTransactions = transactions.filter((t) => t.leaseId === selectedLease);

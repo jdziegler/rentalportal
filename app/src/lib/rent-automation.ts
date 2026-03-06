@@ -3,10 +3,6 @@ import { stripe, CONNECT_FEES } from "@/lib/stripe";
 
 // ── Helpers ──
 
-function getBillingPeriod(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
 function toCents(value: number): number {
   return Math.round(value * 100);
 }

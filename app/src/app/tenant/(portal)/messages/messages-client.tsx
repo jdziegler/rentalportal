@@ -24,11 +24,9 @@ interface LeaseInfo {
 export default function MessagesClient({
   messages,
   leases,
-  contactIds,
 }: {
   messages: MessageInfo[];
   leases: LeaseInfo[];
-  contactIds: string[];
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
