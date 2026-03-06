@@ -7,8 +7,7 @@ Bugs found during product audit. Ordered by severity.
 ## Critical (App-Breaking)
 
 ### ~~BUG-1: All "Add" and detail link buttons navigate to non-existent pages~~ ✅ FIXED
-- All CRUD pages now exist for Properties, Units, Tenants, Leases, Transactions, Maintenance
-- Listings still missing detail/create/edit pages
+- All CRUD pages now exist for Properties, Units, Tenants, Leases, Transactions, Maintenance, Listings
 
 ### ~~BUG-2: No sign-out button anywhere in the app~~ ✅ FIXED
 - Sign-out available in user profile dropdown in sidebar
@@ -30,10 +29,10 @@ Bugs found during product audit. Ordered by severity.
 
 ## Medium (Missing Functionality / UX Issues)
 
-### BUG-6: Billing page doesn't indicate current subscription plan
-- **Affected page**: Settings > Billing
-- **Behavior**: All three plan cards show "Subscribe" buttons equally. No visual distinction for the user's current plan.
-- **Expected**: Current plan should be highlighted, show "Current Plan" badge, and the subscribe button should change to "Manage" or be disabled
+### ~~BUG-6: Billing page doesn't indicate current subscription plan~~ ✅ FIXED
+- Current plan highlighted with blue ring and "Current Plan" badge
+- Button changes to "Manage Plan" for current, "Switch Plan" for others
+- Shows current plan name and next billing date in green banner
 
 ### BUG-7: No error feedback on API failures
 - **Affected pages**: All pages making API calls
@@ -45,10 +44,9 @@ Bugs found during product audit. Ordered by severity.
 - **Behavior**: "Update Account" button always appears when connected, but may fail if account is fully verified and doesn't need updates
 - **Expected**: Only show when account has pending requirements
 
-### BUG-9: Settings Account page shows raw Stripe IDs without context
-- **Affected page**: Settings > Account
-- **Behavior**: Displays stripeCustomerId, stripeSubscriptionId, stripePriceId as raw strings (e.g., "cus_abc123") which are meaningless to users
-- **Expected**: Either hide these technical IDs or translate them to user-friendly labels (plan name, subscription status)
+### ~~BUG-9: Settings Account page shows raw Stripe IDs without context~~ ✅ FIXED
+- Replaced raw Stripe IDs with human-readable info: plan name, subscription status badge, next billing date, rent collection status
+- Separated into Profile and Billing & Payments sections
 
 ### BUG-10: No loading states on initial page load for data-heavy pages
 - **Affected pages**: All list pages (Properties, Units, Tenants, Leases, Transactions, Listings)
@@ -72,10 +70,8 @@ Bugs found during product audit. Ordered by severity.
 - **Behavior**: While nav links highlight the active page, the Settings section doesn't collapse/expand and all sub-links are always visible
 - **Expected**: Collapsible Settings section, or at minimum clear active state on sub-links
 
-### BUG-14: Listing cards show truncated description with no "read more" option (partially moot — needs detail page)
-- **Affected page**: Listings
-- **Behavior**: Description truncated to 2 lines with CSS, no way to see full text without going to a detail page (which doesn't exist)
-- **Expected**: Either show full text or provide expand/read-more functionality
+### ~~BUG-14: Listing cards show truncated description with no "read more" option~~ ✅ FIXED
+- Listing cards now link to detail page where full description is visible
 
 ### BUG-15: Stripe webhook handler uses `as any` type casts
 - **Affected file**: `/api/stripe/webhook`
@@ -93,7 +89,6 @@ Bugs found during product audit. Ordered by severity.
 - **Status**: Unresolved. Attempted fixes: `overflow-x-hidden` on layout, `min-w-0` on main, global CSS `max-width: 100vw`, responsive filter grids. None fixed on real devices.
 - **Impact**: Visual only, content is readable
 
-### BUG-17: No toast/feedback after form submissions
-- **Affected pages**: All create/edit/delete actions
-- **Behavior**: After creating, editing, or deleting an entity, user is redirected but gets no confirmation toast
-- **Expected**: Sonner toast showing "Property created", "Lease deleted", etc.
+### ~~BUG-17: No toast/feedback after form submissions~~ ✅ FIXED
+- All server actions redirect with `?toast=` param, Sonner ToastHandler picks them up
+- Toasts shown for all CRUD operations across all entities

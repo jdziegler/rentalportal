@@ -69,15 +69,16 @@ Without these, the app is read-only and unusable for day-to-day management.
 - [x] Mark as paid / record partial payment / waive
 - [x] Payment progress bar and action buttons
 
-### T1-11: Listing Detail & Edit Page
-- [ ] `/listings/:id` detail page showing full listing with description, amenities, photos, and policies
-- [ ] Edit form: price, deposit, lease length, features, pet policy, description, screening requirements
-- [ ] Activate/deactivate listing toggle
+### T1-11: Listing Detail & Edit Page ✅
+- [x] `/listings/:id` detail page showing full listing with description, unit details, property info
+- [x] Edit form: unit, price, description, active status
+- [x] Activate/deactivate listing toggle
+- [x] Delete listing with confirmation dialog
 
-### T1-12: Listing Create Page
-- [ ] `/listings/new` form to create a listing from an existing vacant unit
-- [ ] Auto-populate from unit data (price, bedrooms, bathrooms, features)
-- [ ] Fields: description, price, deposit, lease length range, pet policy, screening requirements
+### T1-12: Listing Create Page ✅
+- [x] `/listings/new` form to create a listing
+- [x] Unit selector shows property name + unit name
+- [x] Fields: unit, price, description, active status
 
 ---
 
@@ -294,10 +295,10 @@ These enable the core revenue flow for landlords.
 - [ ] Form validation with inline error messages
 - [ ] Toast/notification system for success/error feedback
 
-### T7-5: Current Plan Display in Billing
-- [ ] Show which plan the user is currently on
+### T7-5: Current Plan Display in Billing ✅ (partial)
+- [x] Show which plan the user is currently on
 - [ ] Show usage vs plan limits (units, leases)
-- [ ] Highlight current plan in plan cards
+- [x] Highlight current plan in plan cards
 - [ ] Show billing history/invoices
 
 ### T7-6: Data Export

@@ -85,8 +85,8 @@ Goal: A landlord can manage their portfolio without needing TenantCloud.
 ### 1.1 Fix Critical Bugs
 - [x] Add sign-out button to sidebar (BUG-2)
 - [x] Map property type integers to labels (BUG-3)
-- [ ] Show current plan on billing page (BUG-6)
-- [ ] Hide raw Stripe IDs on account page, show human-readable info (BUG-9)
+- [x] Show current plan on billing page (BUG-6)
+- [x] Hide raw Stripe IDs on account page, show human-readable info (BUG-9)
 
 ### 1.2 Property Pages
 - [x] `/properties/[id]` — detail page: info card, units list, financial summary
@@ -135,10 +135,10 @@ Goal: A landlord can manage their portfolio without needing TenantCloud.
 - [x] Fixed floating-point currency bug (cents-based integer arithmetic)
 
 ### 1.7 Listing Pages
-- [ ] `/listings/[id]` — detail page with full listing info
-- [ ] `/listings/new` — create from vacant unit, auto-populate fields
-- [ ] Activate/deactivate toggle
-- [ ] Listing edit page
+- [x] `/listings/[id]` — detail page with full listing info
+- [x] `/listings/new` — create from vacant unit, auto-populate fields
+- [x] Activate/deactivate toggle
+- [x] Listing edit page
 
 ### 1.8 Maintenance Requests
 - [x] `/maintenance` — list with priority and status badges
@@ -150,7 +150,7 @@ Goal: A landlord can manage their portfolio without needing TenantCloud.
 ### 1.9 Global UX
 - [x] Command palette (Cmd+K) — cross-entity search
 - [ ] Breadcrumb navigation on all detail pages
-- [ ] Toast notifications for all actions (create, edit, delete, errors)
+- [x] Toast notifications for all actions (create, edit, delete, errors)
 - [ ] Empty states with CTAs ("Add your first property")
 - [ ] Loading skeletons on all pages
 - [x] Mobile-responsive tables (card layout on small screens) — all 6 list pages

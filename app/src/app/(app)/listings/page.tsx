@@ -28,7 +28,18 @@ export default async function ListingsPage() {
         </Link>
       </div>
       {listings.length === 0 ? (
-        <p className="text-gray-500">No listings yet.</p>
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <p className="text-gray-600 mb-4">
+            No listings yet. Create your first listing to advertise a vacant
+            unit.
+          </p>
+          <Link
+            href="/listings/new"
+            className="inline-flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+          >
+            Create Listing
+          </Link>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {listings.map((l) => (
