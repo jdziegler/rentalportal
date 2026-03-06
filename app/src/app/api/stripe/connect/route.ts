@@ -61,9 +61,44 @@ export async function GET() {
 
   const account = await stripe.accounts.retrieve(user.stripeConnectId);
 
+  let balance = null;
+  let payouts = null;
+
+  if (account.details_submitted && account.payouts_enabled) {
+    try {
+      const bal = await stripe.balance.retrieve({
+        stripeAccount: user.stripeConnectId,
+      });
+      balance = {
+        available: bal.available
+          .filter((b) => b.currency === "usd")
+          .reduce((sum, b) => sum + b.amount, 0),
+        pending: bal.pending
+          .filter((b) => b.currency === "usd")
+          .reduce((sum, b) => sum + b.amount, 0),
+      };
+
+      const recentPayouts = await stripe.payouts.list(
+        { limit: 5 },
+        { stripeAccount: user.stripeConnectId }
+      );
+      payouts = recentPayouts.data.map((p) => ({
+        id: p.id,
+        amount: p.amount,
+        status: p.status,
+        arrivalDate: p.arrival_date,
+        method: p.method,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch Connect balance/payouts:", err);
+    }
+  }
+
   return NextResponse.json({
     status: account.details_submitted ? "verified" : "pending",
     chargesEnabled: account.charges_enabled,
     payoutsEnabled: account.payouts_enabled,
+    balance,
+    payouts,
   });
 }

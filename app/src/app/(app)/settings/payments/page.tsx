@@ -2,10 +2,20 @@
 
 import { useEffect, useState } from "react";
 
+interface Payout {
+  id: string;
+  amount: number;
+  status: string;
+  arrivalDate: number;
+  method: string;
+}
+
 interface ConnectStatus {
   status: string;
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
+  balance?: { available: number; pending: number } | null;
+  payouts?: Payout[] | null;
 }
 
 export default function PaymentsSettingsPage() {
@@ -100,6 +110,54 @@ export default function PaymentsSettingsPage() {
               <p className="font-medium text-gray-900">
                 {connectStatus.payoutsEnabled ? "Enabled" : "Disabled"}
               </p>
+            </div>
+          </div>
+        )}
+
+        {isVerified && connectStatus?.balance && (
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+              <p className="text-sm text-green-600 mb-1">Available Balance</p>
+              <p className="text-2xl font-bold text-green-700">
+                ${(connectStatus.balance.available / 100).toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+              <p className="text-sm text-yellow-600 mb-1">Pending</p>
+              <p className="text-2xl font-bold text-yellow-700">
+                ${(connectStatus.balance.pending / 100).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {isVerified && connectStatus?.payouts && connectStatus.payouts.length > 0 && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Recent Payouts</h3>
+            <div className="bg-gray-50 rounded-lg divide-y divide-gray-200">
+              {connectStatus.payouts.map((p) => (
+                <div key={p.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-900">
+                      ${(p.amount / 100).toFixed(2)}
+                    </span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                      p.status === "paid"
+                        ? "bg-green-100 text-green-700"
+                        : p.status === "in_transit"
+                          ? "bg-blue-100 text-blue-700"
+                          : p.status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {p.status.replace("_", " ")}
+                    </span>
+                  </div>
+                  <span className="text-gray-500">
+                    {new Date(p.arrivalDate * 1000).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}

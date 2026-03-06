@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface LeaseInfo {
   id: string;
@@ -42,9 +42,23 @@ export default function PayRentClient({
   transactions: TransactionInfo[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedLease, setSelectedLease] = useState(leases[0]?.id || "");
   const [payingId, setPayingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    if (payment === "success") {
+      setSuccessMsg("Payment submitted successfully! It may take a moment to process.");
+      // Clean URL
+      window.history.replaceState({}, "", "/tenant/portal");
+    } else if (payment === "cancelled") {
+      setError("Payment was cancelled.");
+      window.history.replaceState({}, "", "/tenant/portal");
+    }
+  }, [searchParams]);
 
   const currentLease = leases.find((l) => l.id === selectedLease);
   const leaseTransactions = transactions.filter((t) => t.leaseId === selectedLease);
@@ -150,6 +164,12 @@ export default function PayRentClient({
               <p className="text-sm font-medium text-green-800">All caught up! No balance due.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+          {successMsg}
         </div>
       )}
 

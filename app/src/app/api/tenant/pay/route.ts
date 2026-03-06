@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTenantSession } from "@/lib/tenant-auth";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+import { stripe, CONNECT_FEES } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   const session = await getTenantSession();
@@ -66,7 +66,11 @@ export async function POST(req: NextRequest) {
     ],
     payment_method_types: ["card", "us_bank_account"],
     payment_intent_data: {
-      application_fee_amount: Math.round(amountCents * 0.035 + 30), // 3.5% + $0.30
+      // Platform fee: use card rate as ceiling since we don't know method yet
+      // Stripe charges processing fees separately to the connected account
+      application_fee_amount: Math.round(
+        amountCents * (CONNECT_FEES.card_percent / 100) + CONNECT_FEES.card_fixed
+      ),
       transfer_data: {
         destination: landlord.stripeConnectId,
       },
