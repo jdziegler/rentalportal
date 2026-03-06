@@ -18,11 +18,23 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
+  // Stripe Billing (platform subscription)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  stripeCurrentPeriodEnd DateTime?
+
+  // Stripe Connect (rent collection)
+  stripeConnectId      String?   @unique
+  stripeConnectOnboarded Boolean @default(false)
+
   properties   Property[]
   contacts     Contact[]
   leases       Lease[]
   transactions Transaction[]
   listings     Listing[]
+  maintenanceRequests MaintenanceRequest[]
+  rentScheduleConfig  RentScheduleConfig?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -87,6 +99,7 @@ model Property {
   units        Unit[]
   transactions Transaction[]
   listings     Listing[]
+  maintenanceRequests MaintenanceRequest[]
 }
 
 model Unit {
@@ -110,6 +123,7 @@ model Unit {
   leases       Lease[]
   transactions Transaction[]
   listings     Listing[]
+  maintenanceRequests MaintenanceRequest[]
 }
 
 model Contact {
@@ -124,15 +138,21 @@ model Contact {
   city       String?
   state      String?
   zip        String?
-  status     Int     @default(0)  // 0=pending, 1=invited, 2=active
+  status     Int     @default(0)  // 0=pending, 1=invited, 2=active, 3=inactive
   notes      String?
   archivedAt DateTime?
+
+  // Stripe (tenant payment method)
+  stripeCustomerId String?
+
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   leases       Lease[]
   transactions Transaction[]
+  maintenanceRequests MaintenanceRequest[]
+  autoPayConfigs AutoPayConfig[]
 }
 
 model Lease {
@@ -147,6 +167,7 @@ model Lease {
   rentAmount  Decimal  @db.Decimal(10, 2)
   rentPeriod  Int      @default(5)  // 5=monthly
   rentDueDay  Int      @default(1)
+  gracePeriod Int      @default(5)  // days after due date before considered overdue
   currency    String   @default("USD")
   rentFrom    DateTime
   rentTo      DateTime?
@@ -154,10 +175,18 @@ model Lease {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Late fee config (embedded on lease for simplicity)
+  lateFeeEnabled   Boolean @default(false)
+  lateFeeType      String  @default("flat")    // "flat" or "percentage"
+  lateFeeAmount    Decimal @default(0) @db.Decimal(10, 2)  // dollar amount or percentage
+  lateFeeAccrual   String  @default("one_time") // "one_time" or "daily"
+  lateFeeMaxAmount Decimal? @db.Decimal(10, 2)  // cap for daily accrual
+
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   unit         Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
   contact      Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  autoPayConfig AutoPayConfig?
 }
 
 model Transaction {
@@ -178,14 +207,30 @@ model Transaction {
   note        String?
   isRecurring Boolean  @default(false)
   status      Int      @default(0)
+
+  // Automation fields
+  source        String?   // "auto_rent", "auto_late_fee", "manual", null
+  billingPeriod String?   // "2026-03" format for idempotency
+  parentId      String?   // links late fee to its rent charge
+  retryCount    Int       @default(0)
+
+  // Stripe payment tracking
+  stripePaymentIntentId String?
+  stripePaymentStatus   String?  // succeeded, processing, pending, failed
+  paymentMethod         String?  // ach, card, cash, check, etc.
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  unit     Unit?     @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  lease    Lease?    @relation(fields: [leaseId], references: [id], onDelete: SetNull)
-  contact  Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  unit     Unit?         @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  lease    Lease?        @relation(fields: [leaseId], references: [id], onDelete: SetNull)
+  contact  Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  parent   Transaction?  @relation("LateFeeParent", fields: [parentId], references: [id], onDelete: SetNull)
+  lateFees Transaction[] @relation("LateFeeParent")
+
+  @@unique([leaseId, billingPeriod, source], name: "lease_period_source_unique")
 }
 
 model Listing {
@@ -202,4 +247,62 @@ model Listing {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   unit     Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+}
+
+model MaintenanceRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  propertyId  String
+  unitId      String?
+  contactId   String?
+  title       String
+  description String?
+  priority    Int      @default(1)  // 0=low, 1=medium, 2=high, 3=urgent
+  status      Int      @default(0)  // 0=open, 1=in_progress, 2=completed, 3=cancelled
+  category    String?  // plumbing, electrical, hvac, appliance, general, etc.
+  cost        Decimal? @db.Decimal(10, 2)
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit     Unit?     @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  contact  Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+}
+
+// ── Rent Automation ──
+
+model AutoPayConfig {
+  id                    String   @id @default(cuid())
+  leaseId               String   @unique
+  contactId             String
+  enabled               Boolean  @default(true)
+  paymentMethodType     String   @default("us_bank_account") // "us_bank_account" or "card"
+  stripePaymentMethodId String
+  maxRetries            Int      @default(2)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  lease   Lease   @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+model RentScheduleConfig {
+  id         String  @id @default(cuid())
+  userId     String  @unique
+  publishDay Int     @default(1)  // day of month to create rent charges (1-28)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CronJobLog {
+  id          String    @id @default(cuid())
+  jobType     String    // "rent_generation", "auto_payment", "late_fee"
+  status      String    // "started", "completed", "failed"
+  details     Json?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
 }

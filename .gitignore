@@ -16,9 +16,10 @@ next-env.d.ts
 # Prisma
 app/generated/prisma/
 
-# Scraper credentials
+# Scraper credentials & data
 scraper/cookies.json
 scraper/token.json
+scraper/data/
 
 # Logs
 *.log

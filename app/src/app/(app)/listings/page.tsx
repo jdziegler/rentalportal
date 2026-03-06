@@ -19,7 +19,7 @@ export default async function ListingsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Listings</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Listings</h1>
         <Link
           href="/listings/new"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
@@ -38,10 +38,10 @@ export default async function ListingsPage() {
               className="bg-white rounded-lg shadow hover:shadow-md transition overflow-hidden"
             >
               <div className="p-6">
-                <h3 className="font-semibold text-lg mb-1">
+                <h3 className="font-semibold text-lg mb-1 text-gray-900">
                   {l.property.name} — {l.unit.name}
                 </h3>
-                <p className="text-gray-500 text-sm mb-3 line-clamp-2">
+                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                   {l.description || "No description"}
                 </p>
                 <div className="flex items-center justify-between">
