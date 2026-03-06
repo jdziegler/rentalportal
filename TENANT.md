@@ -66,4 +66,4 @@ Lightweight tenant portal with email/SMS code verification. Separate from landlo
 - [x] Mobile-responsive tenant portal (uses Tailwind responsive classes throughout)
 - [x] Rate limiting on code sending (max 5 per hour per identifier)
 - [x] Code expiry cleanup (cleaned up on successful verification)
-- [ ] Error states and loading skeletons on tenant pages
+- [x] Error states and loading skeletons on tenant pages
