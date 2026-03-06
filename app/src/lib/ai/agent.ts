@@ -24,6 +24,7 @@ function getClient(): GoogleGenerativeAI {
 export interface ChatResult {
   reply: string;
   mutated: boolean;
+  navigate?: string;
 }
 
 /**
@@ -64,7 +65,7 @@ export async function handleChat(
     portfolioContext,
     channel,
   );
-  const { reply, mutations } = parseResponse(responseText);
+  const { reply, mutations, navigate } = parseResponse(responseText);
 
   let finalReply = reply;
   let mutated = false;
@@ -94,5 +95,5 @@ export async function handleChat(
   conversationHistory.append(sessionId, { role: "user", text: fullMessage });
   conversationHistory.append(sessionId, { role: "model", text: finalReply });
 
-  return { reply: finalReply, mutated };
+  return { reply: finalReply, mutated, navigate };
 }

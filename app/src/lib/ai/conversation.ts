@@ -44,6 +44,57 @@ When displaying maintenance priority, use: Low, Medium, High, Urgent.
 
 For general property management questions unrelated to specific data, you may answer conversationally.
 
+## Navigation
+
+You can navigate the user to any page in the app. When the user asks to go somewhere, or when it's helpful to link them to a specific page, use an RE_NAVIGATE block AND include a clickable link in your reply text.
+
+Available app routes:
+- /dashboard — Dashboard overview
+- /properties — Properties list
+- /properties/new — Add new property
+- /properties/{id} — Property detail
+- /units — Units list
+- /units/new — Add new unit
+- /units/{id} — Unit detail
+- /tenants — Tenants list
+- /tenants/new — Add new tenant
+- /tenants/{id} — Tenant detail
+- /leases — Leases list
+- /leases/new — Add new lease
+- /leases/{id} — Lease detail
+- /transactions — Transactions list
+- /transactions/new — Add new transaction
+- /transactions/{id} — Transaction detail
+- /maintenance — Maintenance requests list
+- /maintenance/new — New maintenance request
+- /maintenance/{id} — Maintenance detail
+- /settings/account — Account settings
+- /settings/billing — Billing & subscription
+- /settings/payments — Stripe Connect setup
+- /settings/rent-automation — Rent automation settings
+
+When the user asks to "go to", "take me to", "show me", or "open" a page, append:
+
+<!--RE_NAVIGATE
+{"path":"/dashboard"}
+RE_NAVIGATE-->
+
+When linking to a specific entity (property, tenant, etc.), use the entity's ID from the portfolio data to build the path (e.g., /tenants/{id}).
+
+In your reply text, include links using markdown format: [link text](/path). These will be rendered as clickable links.
+
+## Creating New Records
+
+You CANNOT create new tenants, transactions, properties, units, leases, or maintenance requests directly. When the user asks to add/create a new record, provide a link to the appropriate form instead:
+- "Add a tenant" → link to [Add Tenant](/tenants/new)
+- "Create a transaction" → link to [Add Transaction](/transactions/new)
+- "Add a property" → link to [Add Property](/properties/new)
+- "New maintenance request" → link to [New Request](/maintenance/new)
+- "Add a unit" → link to [Add Unit](/units/new)
+- "Create a lease" → link to [Add Lease](/leases/new)
+
+You CAN update/modify existing records using RE_MUTATE (contacts, transactions, leases, maintenance).
+
 ## Channel Behavior
 
 **Web app (default):** The user is in the PropertyPilot web app where data is visible on screen.
@@ -170,15 +221,19 @@ export interface MutationOp {
 export interface ParsedResponse {
   reply: string;
   mutations: MutationOp[];
+  navigate?: string;
 }
 
 const RE_MUTATE_REGEX = /<!--RE_MUTATE\s*([\s\S]*?)\s*RE_MUTATE-->/;
+const RE_NAVIGATE_REGEX = /<!--RE_NAVIGATE\s*([\s\S]*?)\s*RE_NAVIGATE-->/;
 
 export function parseResponse(response: string): ParsedResponse {
   const mutateMatch = RE_MUTATE_REGEX.exec(response);
+  const navMatch = RE_NAVIGATE_REGEX.exec(response);
 
   let reply = response;
   if (mutateMatch) reply = reply.replace(RE_MUTATE_REGEX, "");
+  if (navMatch) reply = reply.replace(RE_NAVIGATE_REGEX, "");
   reply = reply.trim();
 
   let mutations: MutationOp[] = [];
@@ -193,5 +248,17 @@ export function parseResponse(response: string): ParsedResponse {
     }
   }
 
-  return { reply, mutations };
+  let navigate: string | undefined;
+  if (navMatch) {
+    try {
+      const parsed = JSON.parse(navMatch[1]) as { path?: string };
+      if (parsed.path && parsed.path.startsWith("/")) {
+        navigate = parsed.path;
+      }
+    } catch {
+      // malformed JSON — ignore
+    }
+  }
+
+  return { reply, mutations, navigate };
 }

@@ -1,8 +1,39 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { usePageContext, type PageContextData } from "@/lib/ai/page-context";
+
+/** Renders markdown-style [text](/path) links as Next.js Link components */
+function renderMessageText(text: string): ReactNode {
+  const linkRegex = /\[([^\]]+)\]\((\/[^)]+)\)/g;
+  const parts: ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    parts.push(
+      <Link
+        key={match.index}
+        href={match[2]}
+        className="underline font-medium hover:opacity-80"
+      >
+        {match[1]}
+      </Link>,
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -99,6 +130,7 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
         reply?: string;
         error?: string;
         mutated?: boolean;
+        navigate?: string;
       };
       if (!res.ok) throw new Error(data.error ?? "Agent error");
 
@@ -115,6 +147,11 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
       // Live-update the UI if the agent mutated any data
       if (data.mutated) {
         router.refresh();
+      }
+
+      // Auto-navigate if the agent returned a path
+      if (data.navigate) {
+        router.push(data.navigate);
       }
     } catch (err) {
       const errMsg: ChatMessage = {
@@ -217,7 +254,7 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
                       : "bg-gray-100 text-gray-800 rounded-bl-sm"
                   }`}
                 >
-                  {msg.text}
+                  {msg.role === "assistant" ? renderMessageText(msg.text) : msg.text}
                 </div>
               </div>
             ))}
