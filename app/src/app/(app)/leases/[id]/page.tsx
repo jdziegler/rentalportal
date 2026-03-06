@@ -171,7 +171,12 @@ export default async function LeaseDetailPage({
             <div className="flex justify-between">
               <dt className="text-gray-600">Lease Type</dt>
               <dd className="text-gray-900 font-medium">
-                {leaseTypeLabels[lease.leaseType] || "Unknown"}
+                {lease.leaseType === 1 &&
+                 lease.leaseStatus === 0 &&
+                 lease.rentTo &&
+                 lease.rentTo < new Date()
+                  ? "Month-to-Month"
+                  : leaseTypeLabels[lease.leaseType] || "Unknown"}
               </dd>
             </div>
             <div className="flex justify-between">
