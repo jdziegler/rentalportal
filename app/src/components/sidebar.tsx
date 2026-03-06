@@ -66,8 +66,10 @@ function NavIcon({ name }: { name: string }) {
 
 export default function Sidebar({
   user,
+  unreadMessages = 0,
 }: {
   user?: { name?: string | null; email?: string | null; image?: string | null };
+  unreadMessages?: number;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -121,7 +123,12 @@ export default function Sidebar({
               }`}
             >
               <NavIcon name={item.icon} />
-              {item.name}
+              <span className="flex-1">{item.name}</span>
+              {item.name === "Tenants" && unreadMessages > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-blue-600 rounded-full">
+                  {unreadMessages}
+                </span>
+              )}
             </Link>
           );
         })}

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DeleteTenantButton } from "./delete-button";
 import { SetPageContext } from "@/components/set-page-context";
+import MessagesSection from "./messages-section";
+import { PortalLinkButton, PaymentLinkButton } from "./portal-link-button";
 
 const statusLabels: Record<number, string> = {
   0: "Pending",
@@ -40,7 +42,12 @@ export default async function TenantDetailPage({
 
   const leases = await prisma.lease.findMany({
     where: { contactId: id, userId: session.user.id, leaseStatus: 0 },
-    include: {
+    select: {
+      id: true,
+      rentAmount: true,
+      rentFrom: true,
+      rentTo: true,
+      paymentToken: true,
       unit: {
         select: {
           id: true,
@@ -65,6 +72,21 @@ export default async function TenantDetailPage({
   const totalCharged = Number(balanceAgg._sum.amount || 0);
   const totalPaid = Number(balanceAgg._sum.paid || 0);
   const totalBalance = Number(balanceAgg._sum.balance || 0);
+
+  // Messages
+  const messages = await prisma.message.findMany({
+    where: { userId: session.user.id, contactId: id },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, body: true, sender: true, createdAt: true, readAt: true },
+  });
+
+  const serializedMessages = messages.map((m) => ({
+    id: m.id,
+    body: m.body,
+    sender: m.sender,
+    createdAt: m.createdAt.toISOString(),
+    readAt: m.readAt?.toISOString() || null,
+  }));
 
   const recentTransactions = await prisma.transaction.findMany({
     where: { contactId: id, userId: session.user.id },
@@ -92,7 +114,8 @@ export default async function TenantDetailPage({
           </div>
           <h1 className="text-2xl font-bold text-gray-900">{fullName}</h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <PortalLinkButton email={tenant.email} phone={tenant.phone} />
           <Button variant="outline" asChild>
             <Link href={`/tenants/${id}/edit`}>Edit</Link>
           </Button>
@@ -191,6 +214,7 @@ export default async function TenantDetailPage({
                   <th className="px-6 py-3 font-medium">Rent</th>
                   <th className="px-6 py-3 font-medium">Start</th>
                   <th className="px-6 py-3 font-medium">End</th>
+                  <th className="px-6 py-3 font-medium"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -222,6 +246,9 @@ export default async function TenantDetailPage({
                       {lease.rentTo
                         ? lease.rentTo.toLocaleDateString()
                         : "—"}
+                    </td>
+                    <td className="px-6 py-3">
+                      <PaymentLinkButton paymentToken={lease.paymentToken} />
                     </td>
                   </tr>
                 ))}
@@ -278,6 +305,9 @@ export default async function TenantDetailPage({
           </table>
         </div>
       )}
+
+      {/* Messages */}
+      <MessagesSection contactId={id} initialMessages={serializedMessages} />
     </div>
   );
 }

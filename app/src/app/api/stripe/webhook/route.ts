@@ -41,6 +41,21 @@ export async function POST(req: Request) {
           },
         });
       }
+
+      // Tenant portal payment: link PaymentIntent to transaction
+      if (obj.mode === "payment" && obj.metadata?.type === "tenant_payment") {
+        const transactionId = obj.metadata.transactionId;
+        const paymentIntentId = obj.payment_intent;
+        if (transactionId && paymentIntentId) {
+          await prisma.transaction.update({
+            where: { id: transactionId },
+            data: {
+              stripePaymentIntentId: paymentIntentId,
+              stripePaymentStatus: "processing",
+            },
+          });
+        }
+      }
       break;
     }
 

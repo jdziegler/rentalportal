@@ -35,6 +35,7 @@ model User {
   listings     Listing[]
   maintenanceRequests MaintenanceRequest[]
   rentScheduleConfig  RentScheduleConfig?
+  messages     Message[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -153,6 +154,7 @@ model Contact {
   transactions Transaction[]
   maintenanceRequests MaintenanceRequest[]
   autoPayConfigs AutoPayConfig[]
+  messages       Message[]
 }
 
 model Lease {
@@ -182,11 +184,15 @@ model Lease {
   lateFeeAccrual   String  @default("one_time") // "one_time" or "daily"
   lateFeeMaxAmount Decimal? @db.Decimal(10, 2)  // cap for daily accrual
 
+  // Tenant portal
+  paymentToken String?  @unique @default(uuid())
+
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   unit         Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
   contact      Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   autoPayConfig AutoPayConfig?
+  messages      Message[]
 }
 
 model Transaction {
@@ -316,6 +322,35 @@ model RentScheduleConfig {
   updatedAt  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Tenant Portal ──
+
+model TenantVerification {
+  id         String   @id @default(cuid())
+  identifier String   // email or phone number
+  code       String   // 6-digit code
+  type       String   // "email" or "sms"
+  expiresAt  DateTime
+  attempts   Int      @default(0) // track failed attempts
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, code])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  userId    String   // landlord
+  contactId String   // tenant contact
+  leaseId   String?  // optional lease context
+  body      String
+  sender    String   // "landlord" or "tenant"
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  lease   Lease?  @relation(fields: [leaseId], references: [id], onDelete: SetNull)
 }
 
 model CronJobLog {
