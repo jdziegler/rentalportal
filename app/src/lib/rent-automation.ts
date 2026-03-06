@@ -11,6 +11,54 @@ function toCents(value: number): number {
   return Math.round(value * 100);
 }
 
+// ── 0. Convert Expired Fixed-Term Leases to Month-to-Month ──
+
+export interface LeaseConversionResult {
+  converted: number;
+  errors: string[];
+}
+
+/**
+ * Converts expired fixed-term leases to month-to-month.
+ * Called daily — finds active leases where leaseType is 1 (fixed)
+ * and rentTo is in the past, then updates them to leaseType 2
+ * (month-to-month) with no end date.
+ */
+export async function convertExpiredLeases(): Promise<LeaseConversionResult> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiredFixedLeases = await prisma.lease.findMany({
+    where: {
+      leaseStatus: 0, // active
+      leaseType: 1, // fixed-term
+      rentTo: { lt: today },
+    },
+  });
+
+  let converted = 0;
+  const errors: string[] = [];
+
+  for (const lease of expiredFixedLeases) {
+    try {
+      await prisma.lease.update({
+        where: { id: lease.id },
+        data: {
+          leaseType: 2, // month-to-month
+          rentTo: null,
+        },
+      });
+      converted++;
+    } catch (err) {
+      errors.push(
+        `Lease ${lease.id}: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
+
+  return { converted, errors };
+}
+
 // ── 1. Generate Rent Charges ──
 
 export interface RentGenerationResult {
