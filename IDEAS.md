@@ -6,10 +6,10 @@ Prioritized work remaining, organized by phase.
 
 ## Phase 1 Stragglers (Polish)
 
-- [ ] Loading skeletons on all list pages
-- [ ] Vacancy badge + days-vacant counter on units
-- [ ] Tenant balance summary (owed vs paid) on tenant detail
-- [ ] Lease renewal action (create new lease from existing)
+- [x] Loading skeletons on all list + detail pages
+- [x] Vacancy badge + days-vacant counter on units (list + detail)
+- [x] Tenant balance summary (charged/paid/owed) on tenant detail
+- [x] Lease renewal action (create new lease from existing, expire old)
 - [ ] Property image upload (single hero image)
 - [ ] Inline editing on detail pages (click field to edit, auto-save)
 

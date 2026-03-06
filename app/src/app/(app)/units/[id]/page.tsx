@@ -40,6 +40,20 @@ export default async function UnitDetailPage({
 
   const activeLease = unit.leases[0] ?? null;
 
+  // Calculate days vacant
+  let vacantDays = 0;
+  if (!unit.isRented) {
+    const lastLease = await prisma.lease.findFirst({
+      where: { unitId: id, leaseStatus: { in: [1, 2] } },
+      orderBy: { updatedAt: "desc" },
+      select: { rentTo: true, updatedAt: true },
+    });
+    if (lastLease) {
+      const vacantSince = lastLease.rentTo || lastLease.updatedAt;
+      vacantDays = Math.floor((Date.now() - vacantSince.getTime()) / 86400000);
+    }
+  }
+
   // Recent transactions for this unit
   const recentTransactions = await prisma.transaction.findMany({
     where: { unitId: id, userId: session.user.id },
@@ -138,6 +152,14 @@ export default async function UnitDetailPage({
                 </Badge>
               </dd>
             </div>
+            {!unit.isRented && vacantDays > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-gray-600">Days Vacant</dt>
+                <dd className={`font-medium ${vacantDays > 30 ? "text-red-600" : vacantDays > 14 ? "text-yellow-600" : "text-gray-900"}`}>
+                  {vacantDays} days
+                </dd>
+              </div>
+            )}
           </dl>
           {unit.description && (
             <>

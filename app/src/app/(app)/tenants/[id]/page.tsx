@@ -51,6 +51,21 @@ export default async function TenantDetailPage({
     },
   });
 
+  // Balance summary: total charges vs total paid
+  const balanceAgg = await prisma.transaction.aggregate({
+    where: {
+      contactId: id,
+      userId: session.user.id,
+      category: "income",
+      status: { in: [0, 1, 2, 3] }, // exclude voided/waived
+    },
+    _sum: { amount: true, paid: true, balance: true },
+  });
+
+  const totalCharged = Number(balanceAgg._sum.amount || 0);
+  const totalPaid = Number(balanceAgg._sum.paid || 0);
+  const totalBalance = Number(balanceAgg._sum.balance || 0);
+
   const recentTransactions = await prisma.transaction.findMany({
     where: { contactId: id, userId: session.user.id },
     orderBy: { date: "desc" },
@@ -84,6 +99,30 @@ export default async function TenantDetailPage({
           <DeleteTenantButton id={id} name={fullName} />
         </div>
       </div>
+
+      {/* Balance Summary */}
+      {totalCharged > 0 && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <p className="text-2xl font-bold text-gray-900">
+              ${totalCharged.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-sm text-gray-600">Total Charged</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <p className="text-2xl font-bold text-green-600">
+              ${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-sm text-gray-600">Total Paid</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <p className={`text-2xl font-bold ${totalBalance > 0 ? "text-red-600" : "text-gray-900"}`}>
+              ${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-sm text-gray-600">Balance Owed</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Details Card */}

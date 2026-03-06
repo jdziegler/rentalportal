@@ -163,6 +163,54 @@ export async function deleteLease(id: string) {
   redirect("/leases?toast=Lease+deleted");
 }
 
+export async function renewLease(id: string) {
+  const userId = await getUserId();
+
+  const existing = await prisma.lease.findUniqueOrThrow({
+    where: { id, userId },
+  });
+
+  // Expire the old lease
+  await prisma.lease.update({
+    where: { id },
+    data: { leaseStatus: 1 },
+  });
+
+  // Create the new lease starting from the old one's end date (or today)
+  const newStart = existing.rentTo || new Date();
+  const newEnd = existing.rentTo
+    ? new Date(new Date(existing.rentTo).setFullYear(new Date(existing.rentTo).getFullYear() + 1))
+    : null;
+
+  const newLease = await prisma.lease.create({
+    data: {
+      userId,
+      propertyId: existing.propertyId,
+      unitId: existing.unitId,
+      contactId: existing.contactId,
+      name: existing.name,
+      leaseType: existing.leaseType,
+      rentAmount: existing.rentAmount,
+      rentDueDay: existing.rentDueDay,
+      gracePeriod: existing.gracePeriod,
+      currency: existing.currency,
+      rentFrom: newStart,
+      rentTo: newEnd,
+      deposit: existing.deposit,
+      lateFeeEnabled: existing.lateFeeEnabled,
+      lateFeeType: existing.lateFeeType,
+      lateFeeAmount: existing.lateFeeAmount,
+      lateFeeAccrual: existing.lateFeeAccrual,
+      lateFeeMaxAmount: existing.lateFeeMaxAmount,
+    },
+  });
+
+  revalidatePath("/leases");
+  revalidatePath(`/leases/${id}`);
+  revalidatePath(`/units/${existing.unitId}`);
+  redirect(`/leases/${newLease.id}?toast=Lease+renewed`);
+}
+
 export async function terminateLease(id: string) {
   const userId = await getUserId();
 

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DeleteLeaseButton } from "./delete-button";
-import { terminateLease } from "@/lib/actions/leases";
+import { terminateLease, renewLease } from "@/lib/actions/leases";
 import { SetPageContext } from "@/components/set-page-context";
 
 const leaseTypeLabels: Record<number, string> = {
@@ -68,6 +68,7 @@ export default async function LeaseDetailPage({
   });
 
   const terminateWithId = terminateLease.bind(null, id);
+  const renewWithId = renewLease.bind(null, id);
 
   const leaseStatusLabel = leaseStatusLabels[lease.leaseStatus] ?? "Unknown";
 
@@ -103,11 +104,18 @@ export default async function LeaseDetailPage({
             <Link href={`/leases/${id}/edit`}>Edit</Link>
           </Button>
           {lease.leaseStatus === 0 && (
-            <form action={terminateWithId}>
-              <Button type="submit" variant="outline">
-                Terminate
-              </Button>
-            </form>
+            <>
+              <form action={renewWithId}>
+                <Button type="submit" variant="outline">
+                  Renew
+                </Button>
+              </form>
+              <form action={terminateWithId}>
+                <Button type="submit" variant="outline">
+                  Terminate
+                </Button>
+              </form>
+            </>
           )}
           <DeleteLeaseButton id={id} name={leaseName} />
         </div>

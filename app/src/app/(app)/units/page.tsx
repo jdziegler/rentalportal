@@ -18,7 +18,14 @@ export default async function UnitsPage() {
 
   const units = await prisma.unit.findMany({
     where: { property: { userId: session.user.id } },
-    include: { property: { select: { id: true, name: true } } },
+    include: {
+      property: { select: { id: true, name: true } },
+      leases: {
+        orderBy: { updatedAt: "desc" },
+        select: { leaseStatus: true, rentTo: true, updatedAt: true },
+        take: 1,
+      },
+    },
     orderBy: { name: "asc" },
   });
 
@@ -91,6 +98,18 @@ export default async function UnitsPage() {
                       >
                         {u.isRented ? "Occupied" : "Vacant"}
                       </Badge>
+                      {!u.isRented && (() => {
+                        const lastLease = u.leases[0];
+                        if (!lastLease) return null;
+                        const vacantSince = lastLease.rentTo || lastLease.updatedAt;
+                        const days = Math.floor((Date.now() - vacantSince.getTime()) / 86400000);
+                        if (days <= 0) return null;
+                        return (
+                          <span className="ml-2 text-xs text-gray-500">
+                            {days}d
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -106,16 +125,26 @@ export default async function UnitsPage() {
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-gray-900">{u.name}</span>
-                  <Badge
-                    variant="secondary"
-                    className={
-                      u.isRented
-                        ? "bg-green-100 text-green-700 hover:bg-green-100"
-                        : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
-                    }
-                  >
-                    {u.isRented ? "Occupied" : "Vacant"}
-                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <Badge
+                      variant="secondary"
+                      className={
+                        u.isRented
+                          ? "bg-green-100 text-green-700 hover:bg-green-100"
+                          : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
+                      }
+                    >
+                      {u.isRented ? "Occupied" : "Vacant"}
+                    </Badge>
+                    {!u.isRented && (() => {
+                      const lastLease = u.leases[0];
+                      if (!lastLease) return null;
+                      const vacantSince = lastLease.rentTo || lastLease.updatedAt;
+                      const days = Math.floor((Date.now() - vacantSince.getTime()) / 86400000);
+                      if (days <= 0) return null;
+                      return <span className="text-xs text-gray-500">{days}d</span>;
+                    })()}
+                  </div>
                 </div>
                 <div className="mt-1">
                   <Link
