@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { SetPageContext } from "@/components/set-page-context";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -68,6 +69,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
+      <SetPageContext context={`Dashboard: ${propertyCount} properties, ${unitCount} units (${occupancyRate}% occupied), ${leaseCount} active leases, ${tenantCount} tenants. MTD income: $${income.toLocaleString()}, expenses: $${expenses.toLocaleString()}.`} />
       <h1 className="text-2xl font-bold mb-6 text-gray-900">Dashboard</h1>
 
       {/* Stats */}

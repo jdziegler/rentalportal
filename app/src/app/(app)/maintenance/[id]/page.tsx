@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DeleteMaintenanceButton } from "./delete-button";
 import { StatusButtons } from "./status-buttons";
+import { SetPageContext } from "@/components/set-page-context";
 
 const priorityLabels: Record<number, string> = {
   0: "Low",
@@ -59,6 +60,7 @@ export default async function MaintenanceDetailPage({
 
   return (
     <div>
+      <SetPageContext context={`Maintenance request: "${request.title}" — ${statusLabels[request.status]} [${priorityLabels[request.priority]}]. ${request.category ? `Category: ${request.category}.` : ""} Property: ${request.property.name}${request.unit ? `, Unit: ${request.unit.name}` : ""}. ${request.contact ? `Reported by: ${request.contact.firstName} ${request.contact.lastName}.` : ""} Opened: ${request.createdAt.toISOString().split("T")[0]}. Request ID: ${request.id}. Full details visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>

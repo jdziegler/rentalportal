@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { handleWebChat } from "@/lib/ai/agent";
+import { handleChat } from "@/lib/ai/agent";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -12,6 +12,7 @@ export async function POST(req: Request) {
     message?: string;
     context?: string;
     sessionId?: string;
+    channel?: string;
   };
 
   if (!body.message?.trim()) {
@@ -23,13 +24,15 @@ export async function POST(req: Request) {
 
   try {
     const sessionId = body.sessionId ?? session.user.id;
-    const reply = await handleWebChat(
+    const channel = body.channel ?? "web";
+    const result = await handleChat(
       session.user.id,
       sessionId,
       body.message,
+      channel,
       body.context,
     );
-    return NextResponse.json({ reply });
+    return NextResponse.json(result);
   } catch (err) {
     console.error("[api/chat] Error:", err);
     return NextResponse.json(

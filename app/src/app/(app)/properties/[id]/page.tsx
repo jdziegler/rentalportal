@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DeletePropertyButton } from "./delete-button";
+import { SetPageContext } from "@/components/set-page-context";
 
 const propertyTypes: Record<number, string> = {
   1: "Single Family",
@@ -62,6 +63,7 @@ export default async function PropertyDetailPage({
 
   return (
     <div>
+      <SetPageContext context={`Property detail: "${property.name}" at ${property.address}, ${property.city}, ${property.state} ${property.zip}. ${totalUnits} units, ${occupancyRate}% occupied, $${totalRent.toLocaleString()}/mo total rent. Property ID: ${property.id}. Unit details, transactions, and listings visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>

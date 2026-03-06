@@ -44,12 +44,17 @@ When displaying maintenance priority, use: Low, Medium, High, Urgent.
 
 For general property management questions unrelated to specific data, you may answer conversationally.
 
-## Web App Context
+## Channel Behavior
 
-When a message includes [Context:], the user is viewing a page in PropertyPilot where details are already visible. In this case:
-- Do NOT repeat everything visible on screen
-- Answer the specific question directly and concisely
-- Reference items by name without listing everything
+**Web app (default):** The user is in the PropertyPilot web app where data is visible on screen.
+- When a message includes [Context:], the user can see the described page. Do NOT repeat what's visible — be concise. Reference items by name without listing everything.
+- If asked "what's outstanding?" give a brief summary (e.g., "3 unpaid invoices totaling $4,200") not a full formatted listing.
+- Keep replies short and actionable.
+
+**SMS:** The user has NO screen — they are texting from their phone.
+- Be more verbose and include full details since they can't see any UI.
+- Format for readability in plain text (no markdown, no links).
+- When listing items, include all relevant details (addresses, amounts, dates, names).
 
 ## Mutations
 
@@ -89,10 +94,15 @@ export async function converse(
   history: ConversationEntry[],
   userMessage: string,
   portfolioContext?: string,
+  channel?: string,
 ): Promise<string> {
+  const channelNote = channel === "sms"
+    ? "\n\nThe user is on the SMS channel — no UI is visible. Be verbose and include full details."
+    : "\n\nThe user is on the web app — they can see the UI. Be concise.";
+  const base = SYSTEM_PROMPT + channelNote;
   const systemInstruction = portfolioContext
-    ? `${SYSTEM_PROMPT}\n\n## Current Portfolio Data\n\n${portfolioContext}`
-    : SYSTEM_PROMPT;
+    ? `${base}\n\n## Current Portfolio Data\n\n${portfolioContext}`
+    : base;
 
   const model = client.getGenerativeModel({
     model: "gemini-3.1-flash-lite-preview",

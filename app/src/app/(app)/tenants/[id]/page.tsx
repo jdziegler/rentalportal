@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DeleteTenantButton } from "./delete-button";
+import { SetPageContext } from "@/components/set-page-context";
 
 const statusLabels: Record<number, string> = {
   0: "Pending",
@@ -63,6 +64,7 @@ export default async function TenantDetailPage({
 
   return (
     <div>
+      <SetPageContext context={`Tenant detail: ${fullName} (ID: ${tenant.id}). Email: ${tenant.email ?? "N/A"}, Phone: ${tenant.phone ?? "N/A"}. ${leases.length} active lease(s)${leases.length > 0 ? `: ${leases.map(l => `${l.unit.property.name} / ${l.unit.name} — $${Number(l.rentAmount)}/mo`).join("; ")}` : ""}. Contact details, leases, and recent transactions visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>

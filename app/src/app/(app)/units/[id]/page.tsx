@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DeleteUnitButton } from "./delete-button";
+import { SetPageContext } from "@/components/set-page-context";
 
 const unitTypes: Record<number, string> = {
   1: "Apartment",
@@ -49,6 +50,7 @@ export default async function UnitDetailPage({
 
   return (
     <div>
+      <SetPageContext context={`Unit detail: "${unit.name}" at property "${unit.property.name}". ${unit.bedrooms ?? "?"}bd/${unit.bathrooms ?? "?"}ba, rent $${unit.price ?? "N/A"}/mo. ${unit.isRented ? `Occupied — tenant: ${activeLease?.contact.firstName} ${activeLease?.contact.lastName}` : "Vacant"}. Unit ID: ${unit.id}. Lease and transaction details visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>

@@ -21,12 +21,24 @@ function getClient(): GoogleGenerativeAI {
   return clientInstance;
 }
 
-export async function handleWebChat(
+export interface ChatResult {
+  reply: string;
+  mutated: boolean;
+}
+
+/**
+ * Main chat handler — works for web chatbox, SMS, or any future channel.
+ *
+ * @param channel - "web" (user has UI context, be concise) or "sms" (no UI, be verbose)
+ * @param pageContext - What the user is currently viewing (web only)
+ */
+export async function handleChat(
   userId: string,
   sessionId: string,
   message: string,
+  channel: string = "web",
   pageContext?: string,
-): Promise<string> {
+): Promise<ChatResult> {
   const client = getClient();
 
   let portfolioContext: string | undefined;
@@ -36,9 +48,13 @@ export async function handleWebChat(
     console.error("[ai] Failed to load portfolio context:", err);
   }
 
-  const fullMessage = pageContext
-    ? `[Context: ${pageContext}]\n\n${message}`
-    : message;
+  // For web channel with page context, prefix the message so the LLM knows
+  // what's already visible on screen and can be concise.
+  // For SMS or other channels, send the raw message — the LLM will be verbose.
+  let fullMessage = message;
+  if (channel === "web" && pageContext) {
+    fullMessage = `[Context: ${pageContext}]\n\n${message}`;
+  }
 
   const history = conversationHistory.get(sessionId);
   const responseText = await converse(
@@ -46,14 +62,20 @@ export async function handleWebChat(
     history,
     fullMessage,
     portfolioContext,
+    channel,
   );
   const { reply, mutations } = parseResponse(responseText);
 
   let finalReply = reply;
+  let mutated = false;
+
   if (mutations.length > 0) {
     try {
       const mutationResults = await executeMutations(userId, mutations);
       const hasFailures = mutationResults.some((r) => r.status !== "ok");
+      const hasSuccesses = mutationResults.some((r) => r.status === "ok");
+      mutated = hasSuccesses;
+
       if (hasFailures) {
         finalReply = await correctFailedMutations(
           client,
@@ -72,5 +94,5 @@ export async function handleWebChat(
   conversationHistory.append(sessionId, { role: "user", text: fullMessage });
   conversationHistory.append(sessionId, { role: "model", text: finalReply });
 
-  return finalReply;
+  return { reply: finalReply, mutated };
 }

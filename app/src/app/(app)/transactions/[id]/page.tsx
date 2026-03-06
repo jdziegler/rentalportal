@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { DeleteTransactionButton } from "./delete-button";
 import { TransactionActions } from "./transaction-actions";
 import { statusLabels, statusStyles } from "@/lib/transaction-status";
+import { SetPageContext } from "@/components/set-page-context";
 
 const paymentMethods: Record<string, string> = {
   cash: "Cash",
@@ -45,6 +46,7 @@ export default async function TransactionDetailPage({
 
   return (
     <div>
+      <SetPageContext context={`Transaction detail: ${transaction.details ?? transaction.category} — $${amount.toLocaleString()} (${isIncome ? "Income" : "Expense"}). Status: ${statusLabels[transaction.status] ?? "Unknown"}, paid: $${paid.toLocaleString()}, balance: $${balance.toLocaleString()}. Date: ${transaction.date.toISOString().split("T")[0]}. ${transaction.property ? `Property: ${transaction.property.name}` : ""}${transaction.unit ? `, Unit: ${transaction.unit.name}` : ""}${transaction.contact ? `. Tenant: ${transaction.contact.firstName} ${transaction.contact.lastName}` : ""}. Transaction ID: ${transaction.id}. Full details visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>

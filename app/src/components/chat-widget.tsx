@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { usePageContext } from "@/lib/ai/page-context";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -33,13 +35,9 @@ function saveHistory(storageKey: string, messages: ChatMessage[]) {
   } catch {}
 }
 
-export function ChatWidget({
-  pageContext,
-  storageKey = "pp-chat",
-}: {
-  pageContext?: string;
-  storageKey?: string;
-}) {
+export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) {
+  const pageContext = usePageContext();
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [collapsed, setCollapsed] = useState(true);
   const [input, setInput] = useState("");
@@ -91,9 +89,17 @@ export function ChatWidget({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, context: pageContext }),
+        body: JSON.stringify({
+          message: text,
+          context: pageContext || undefined,
+          channel: "web",
+        }),
       });
-      const data = (await res.json()) as { reply?: string; error?: string };
+      const data = (await res.json()) as {
+        reply?: string;
+        error?: string;
+        mutated?: boolean;
+      };
       if (!res.ok) throw new Error(data.error ?? "Agent error");
 
       const reply: ChatMessage = {
@@ -105,6 +111,11 @@ export function ChatWidget({
       setMessages(withReply);
       saveHistory(storageKey, withReply);
       if (collapsed) setUnread((u) => u + 1);
+
+      // Live-update the UI if the agent mutated any data
+      if (data.mutated) {
+        router.refresh();
+      }
     } catch (err) {
       const errMsg: ChatMessage = {
         role: "assistant",
@@ -117,7 +128,7 @@ export function ChatWidget({
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, storageKey, pageContext, collapsed]);
+  }, [input, loading, messages, storageKey, pageContext, collapsed, router]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
