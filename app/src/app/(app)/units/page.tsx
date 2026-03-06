@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
+import { ListFilters, type FilterConfig } from "@/components/list-filters";
+import { Pagination } from "@/components/pagination";
 
 const unitTypes: Record<number, string> = {
   1: "Apartment",
@@ -12,35 +14,111 @@ const unitTypes: Record<number, string> = {
   3: "Room",
 };
 
-export default async function UnitsPage() {
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+export default async function UnitsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const units = await prisma.unit.findMany({
-    where: { property: { userId: session.user.id } },
-    include: {
-      property: { select: { id: true, name: true } },
-      leases: {
-        orderBy: { updatedAt: "desc" },
-        select: { leaseStatus: true, rentTo: true, updatedAt: true },
-        take: 1,
+  const params = await searchParams;
+  const search = typeof params.search === "string" ? params.search : "";
+  const propertyId = typeof params.propertyId === "string" ? params.propertyId : "";
+  const status = typeof params.status === "string" ? params.status : "";
+  const page = Math.max(1, parseInt(String(params.page || "1"), 10) || 1);
+  const rawPageSize = parseInt(String(params.pageSize || "25"), 10);
+  const pageSize = PAGE_SIZE_OPTIONS.includes(rawPageSize as 25 | 50 | 100) ? rawPageSize : 25;
+
+  // Build where clause
+  const where: Record<string, unknown> = {
+    property: { userId: session.user.id },
+  };
+
+  if (search) {
+    where.name = { contains: search, mode: "insensitive" };
+  }
+
+  if (propertyId && propertyId !== "all") {
+    where.propertyId = propertyId;
+  }
+
+  if (status === "occupied") {
+    where.isRented = true;
+  } else if (status === "vacant") {
+    where.isRented = false;
+  }
+
+  const skip = (page - 1) * pageSize;
+
+  const [totalCount, units, properties] = await Promise.all([
+    prisma.unit.count({ where }),
+    prisma.unit.findMany({
+      where,
+      include: {
+        property: { select: { id: true, name: true } },
+        leases: {
+          orderBy: { updatedAt: "desc" },
+          select: { leaseStatus: true, rentTo: true, updatedAt: true },
+          take: 1,
+        },
       },
+      orderBy: { name: "asc" },
+      skip,
+      take: pageSize,
+    }),
+    prisma.property.findMany({
+      where: { userId: session.user.id, archivedAt: null },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const filters: FilterConfig[] = [
+    {
+      key: "search",
+      label: "Search",
+      type: "search",
+      placeholder: "Unit name...",
     },
-    orderBy: { name: "asc" },
-  });
+    {
+      key: "propertyId",
+      label: "Property",
+      type: "select",
+      options: [
+        { value: "all", label: "All Properties" },
+        ...properties.map((p) => ({ value: p.id, label: p.name })),
+      ],
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { value: "all", label: "All Statuses" },
+        { value: "occupied", label: "Occupied" },
+        { value: "vacant", label: "Vacant" },
+      ],
+    },
+  ];
 
   return (
     <div>
-      <SetPageContext label="/Units" context={`Units list: ${units.length} units. User can see unit names, properties, bed/bath counts, rent prices, and occupancy status.`} />
+      <SetPageContext label="/Units" context={`Units list: ${totalCount} units (page ${page}). User can see unit names, properties, bed/bath counts, rent prices, and occupancy status.`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Units</h1>
         <Button asChild>
           <Link href="/units/new">Add Unit</Link>
         </Button>
       </div>
+
+      <ListFilters basePath="/units" filters={filters} />
+
       {units.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 mb-4">No units yet. Add your first unit to get started.</p>
+          <p className="text-gray-600 mb-4">No units found. Try adjusting your filters or add a new unit.</p>
           <Button asChild>
             <Link href="/units/new">Add Unit</Link>
           </Button>
@@ -168,6 +246,8 @@ export default async function UnitsPage() {
           </div>
         </>
       )}
+
+      <Pagination totalCount={totalCount} page={page} pageSize={pageSize} basePath="/units" />
     </div>
   );
 }

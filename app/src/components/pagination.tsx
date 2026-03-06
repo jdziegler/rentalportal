@@ -14,9 +14,10 @@ interface PaginationProps {
   totalCount: number;
   page: number;
   pageSize: number;
+  basePath?: string;
 }
 
-export function Pagination({ totalCount, page, pageSize }: PaginationProps) {
+export function Pagination({ totalCount, page, pageSize, basePath = "/transactions" }: PaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -33,14 +34,14 @@ export function Pagination({ totalCount, page, pageSize }: PaginationProps) {
         params.delete(key);
       }
     }
-    router.push(`/transactions?${params.toString()}`);
+    router.push(`${basePath}?${params.toString()}`);
   }
 
   function goToPage(newPage: number) {
     if (newPage <= 1) {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("page");
-      router.push(`/transactions?${params.toString()}`);
+      router.push(`${basePath}?${params.toString()}`);
     } else {
       updateParams({ page: String(newPage) });
     }
@@ -54,7 +55,7 @@ export function Pagination({ totalCount, page, pageSize }: PaginationProps) {
       params.set("pageSize", newSize);
     }
     params.delete("page");
-    router.push(`/transactions?${params.toString()}`);
+    router.push(`${basePath}?${params.toString()}`);
   }
 
   return (

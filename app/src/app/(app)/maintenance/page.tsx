@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
+import { ListFilters, type FilterConfig } from "@/components/list-filters";
+import { Pagination } from "@/components/pagination";
 
 const priorityLabels: Record<number, string> = {
   0: "Low",
@@ -34,26 +36,102 @@ const statusStyles: Record<number, string> = {
   3: "bg-gray-100 text-gray-700 hover:bg-gray-100",
 };
 
-export default async function MaintenancePage() {
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+export default async function MaintenancePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const requests = await prisma.maintenanceRequest.findMany({
-    where: { userId: session.user.id },
-    include: {
-      property: { select: { id: true, name: true } },
-      unit: { select: { id: true, name: true } },
-      contact: { select: { id: true, firstName: true, lastName: true } },
-    },
-    orderBy: [{ status: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
-  });
+  const params = await searchParams;
+  const statusParam = typeof params.status === "string" ? params.status : "";
+  const priorityParam = typeof params.priority === "string" ? params.priority : "";
+  const propertyId = typeof params.propertyId === "string" ? params.propertyId : "";
+  const page = Math.max(1, parseInt(String(params.page || "1"), 10) || 1);
+  const rawPageSize = parseInt(String(params.pageSize || "25"), 10);
+  const pageSize = PAGE_SIZE_OPTIONS.includes(rawPageSize as 25 | 50 | 100) ? rawPageSize : 25;
 
-  const openCount = requests.filter((r) => r.status === 0).length;
-  const inProgressCount = requests.filter((r) => r.status === 1).length;
+  // Build where clause
+  const where: Record<string, unknown> = { userId: session.user.id };
+
+  if (statusParam && statusParam !== "all") {
+    where.status = parseInt(statusParam, 10);
+  }
+
+  if (priorityParam && priorityParam !== "all") {
+    where.priority = parseInt(priorityParam, 10);
+  }
+
+  if (propertyId && propertyId !== "all") {
+    where.propertyId = propertyId;
+  }
+
+  const skip = (page - 1) * pageSize;
+
+  const [totalCount, requests, properties, openCount, inProgressCount] = await Promise.all([
+    prisma.maintenanceRequest.count({ where }),
+    prisma.maintenanceRequest.findMany({
+      where,
+      include: {
+        property: { select: { id: true, name: true } },
+        unit: { select: { id: true, name: true } },
+        contact: { select: { id: true, firstName: true, lastName: true } },
+      },
+      orderBy: [{ status: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
+      skip,
+      take: pageSize,
+    }),
+    prisma.property.findMany({
+      where: { userId: session.user.id, archivedAt: null },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.maintenanceRequest.count({ where: { userId: session.user.id, status: 0 } }),
+    prisma.maintenanceRequest.count({ where: { userId: session.user.id, status: 1 } }),
+  ]);
+
+  const filters: FilterConfig[] = [
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { value: "all", label: "All Statuses" },
+        { value: "0", label: "Open" },
+        { value: "1", label: "In Progress" },
+        { value: "2", label: "Completed" },
+        { value: "3", label: "Cancelled" },
+      ],
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      type: "select",
+      options: [
+        { value: "all", label: "All Priorities" },
+        { value: "0", label: "Low" },
+        { value: "1", label: "Medium" },
+        { value: "2", label: "High" },
+        { value: "3", label: "Urgent" },
+      ],
+    },
+    {
+      key: "propertyId",
+      label: "Property",
+      type: "select",
+      options: [
+        { value: "all", label: "All Properties" },
+        ...properties.map((p) => ({ value: p.id, label: p.name })),
+      ],
+    },
+  ];
 
   return (
     <div>
-      <SetPageContext label="/Maintenance" context={`Maintenance list: ${requests.length} total requests. ${openCount} open, ${inProgressCount} in progress. User can see title, property/unit, priority, status, reporter, and date.`} />
+      <SetPageContext label="/Maintenance" context={`Maintenance list: ${totalCount} requests shown (page ${page}). ${openCount} open, ${inProgressCount} in progress total. User can see title, property/unit, priority, status, reporter, and date.`} />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Maintenance</h1>
@@ -66,10 +144,12 @@ export default async function MaintenancePage() {
         </Button>
       </div>
 
+      <ListFilters basePath="/maintenance" filters={filters} />
+
       {requests.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <p className="text-gray-600 mb-4">
-            No maintenance requests yet.
+            No maintenance requests found. Try adjusting your filters.
           </p>
           <Button asChild>
             <Link href="/maintenance/new">Create Request</Link>
@@ -173,6 +253,8 @@ export default async function MaintenancePage() {
           </div>
         </>
       )}
+
+      <Pagination totalCount={totalCount} page={page} pageSize={pageSize} basePath="/maintenance" />
     </div>
   );
 }

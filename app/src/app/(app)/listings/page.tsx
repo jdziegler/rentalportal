@@ -2,19 +2,62 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { ListFilters, type FilterConfig } from "@/components/list-filters";
+import { Pagination } from "@/components/pagination";
 
-export default async function ListingsPage() {
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+export default async function ListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const listings = await prisma.listing.findMany({
-    where: { userId: session.user.id },
-    include: {
-      property: { select: { name: true } },
-      unit: { select: { name: true } },
+  const params = await searchParams;
+  const statusParam = typeof params.status === "string" ? params.status : "";
+  const page = Math.max(1, parseInt(String(params.page || "1"), 10) || 1);
+  const rawPageSize = parseInt(String(params.pageSize || "25"), 10);
+  const pageSize = PAGE_SIZE_OPTIONS.includes(rawPageSize as 25 | 50 | 100) ? rawPageSize : 25;
+
+  // Build where clause
+  const where: Record<string, unknown> = { userId: session.user.id };
+
+  if (statusParam === "active") {
+    where.isActive = true;
+  } else if (statusParam === "inactive") {
+    where.isActive = false;
+  }
+
+  const skip = (page - 1) * pageSize;
+
+  const [totalCount, listings] = await Promise.all([
+    prisma.listing.count({ where }),
+    prisma.listing.findMany({
+      where,
+      include: {
+        property: { select: { name: true } },
+        unit: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: pageSize,
+    }),
+  ]);
+
+  const filters: FilterConfig[] = [
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { value: "all", label: "All Listings" },
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" },
+      ],
     },
-    orderBy: { createdAt: "desc" },
-  });
+  ];
 
   return (
     <div>
@@ -27,11 +70,13 @@ export default async function ListingsPage() {
           Create Listing
         </Link>
       </div>
+
+      <ListFilters basePath="/listings" filters={filters} />
+
       {listings.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <p className="text-gray-600 mb-4">
-            No listings yet. Create your first listing to advertise a vacant
-            unit.
+            No listings found. Try adjusting your filters or create a new listing.
           </p>
           <Link
             href="/listings/new"
@@ -74,6 +119,8 @@ export default async function ListingsPage() {
           ))}
         </div>
       )}
+
+      <Pagination totalCount={totalCount} page={page} pageSize={pageSize} basePath="/listings" />
     </div>
   );
 }

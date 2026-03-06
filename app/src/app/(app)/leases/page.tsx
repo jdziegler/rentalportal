@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
+import { ListFilters, type FilterConfig } from "@/components/list-filters";
+import { Pagination } from "@/components/pagination";
 
 const leaseStatusLabels: Record<number, string> = {
   0: "Active",
@@ -18,33 +20,111 @@ const leaseStatusStyles: Record<number, string> = {
   2: "bg-gray-100 text-gray-700 hover:bg-gray-100",
 };
 
-export default async function LeasesPage() {
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+export default async function LeasesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const leases = await prisma.lease.findMany({
-    where: { userId: session.user.id },
-    include: {
-      unit: { select: { id: true, name: true, property: { select: { id: true, name: true } } } },
-      contact: { select: { id: true, firstName: true, lastName: true } },
+  const params = await searchParams;
+  const search = typeof params.search === "string" ? params.search : "";
+  const statusParam = typeof params.status === "string" ? params.status : "0";
+  const propertyId = typeof params.propertyId === "string" ? params.propertyId : "";
+  const page = Math.max(1, parseInt(String(params.page || "1"), 10) || 1);
+  const rawPageSize = parseInt(String(params.pageSize || "25"), 10);
+  const pageSize = PAGE_SIZE_OPTIONS.includes(rawPageSize as 25 | 50 | 100) ? rawPageSize : 25;
+
+  // Build where clause
+  const where: Record<string, unknown> = { userId: session.user.id };
+
+  if (statusParam && statusParam !== "all") {
+    where.leaseStatus = parseInt(statusParam, 10);
+  }
+
+  if (propertyId && propertyId !== "all") {
+    where.unit = { propertyId };
+  }
+
+  if (search) {
+    where.contact = {
+      OR: [
+        { firstName: { contains: search, mode: "insensitive" } },
+        { lastName: { contains: search, mode: "insensitive" } },
+      ],
+    };
+  }
+
+  const skip = (page - 1) * pageSize;
+
+  const [totalCount, leases, properties] = await Promise.all([
+    prisma.lease.count({ where }),
+    prisma.lease.findMany({
+      where,
+      include: {
+        unit: { select: { id: true, name: true, property: { select: { id: true, name: true } } } },
+        contact: { select: { id: true, firstName: true, lastName: true } },
+      },
+      orderBy: { rentFrom: "desc" },
+      skip,
+      take: pageSize,
+    }),
+    prisma.property.findMany({
+      where: { userId: session.user.id, archivedAt: null },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const filters: FilterConfig[] = [
+    {
+      key: "search",
+      label: "Search",
+      type: "search",
+      placeholder: "Tenant name...",
     },
-    orderBy: { rentFrom: "desc" },
-  });
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      defaultValue: "0",
+      options: [
+        { value: "all", label: "All Statuses" },
+        { value: "0", label: "Active" },
+        { value: "1", label: "Expired" },
+        { value: "2", label: "Terminated" },
+      ],
+    },
+    {
+      key: "propertyId",
+      label: "Property",
+      type: "select",
+      options: [
+        { value: "all", label: "All Properties" },
+        ...properties.map((p) => ({ value: p.id, label: p.name })),
+      ],
+    },
+  ];
 
   return (
     <div>
-      <SetPageContext label="/Leases" context={`Leases list: ${leases.length} leases. User can see property/unit, tenant name, start/end dates, rent amount, and status.`} />
+      <SetPageContext label="/Leases" context={`Leases list: ${totalCount} leases (page ${page}). User can see property/unit, tenant name, start/end dates, rent amount, and status.`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Leases</h1>
         <Button asChild>
           <Link href="/leases/new">Add Lease</Link>
         </Button>
       </div>
+
+      <ListFilters basePath="/leases" filters={filters} />
+
       {leases.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <p className="text-gray-500 mb-4">
-            No leases yet. Create your first lease to start tracking rental
-            agreements.
+            No leases found. Try adjusting your filters or create a new lease.
           </p>
           <Button asChild>
             <Link href="/leases/new">Add Lease</Link>
@@ -137,6 +217,8 @@ export default async function LeasesPage() {
           </div>
         </>
       )}
+
+      <Pagination totalCount={totalCount} page={page} pageSize={pageSize} basePath="/leases" />
     </div>
   );
 }

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
+import { ListFilters } from "@/components/list-filters";
+import { Pagination } from "@/components/pagination";
 
 const propertyTypes: Record<number, string> = {
   1: "Single Family",
@@ -12,31 +14,92 @@ const propertyTypes: Record<number, string> = {
   3: "Commercial",
 };
 
-export default async function PropertiesPage() {
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+export default async function PropertiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const properties = await prisma.property.findMany({
-    where: { userId: session.user.id, archivedAt: null },
-    include: {
-      _count: { select: { units: true } },
-      units: { select: { isRented: true } },
+  const params = await searchParams;
+  const search = typeof params.search === "string" ? params.search : "";
+  const type = typeof params.type === "string" ? params.type : "";
+  const page = Math.max(1, parseInt(String(params.page || "1"), 10) || 1);
+  const rawPageSize = parseInt(String(params.pageSize || "25"), 10);
+  const pageSize = PAGE_SIZE_OPTIONS.includes(rawPageSize as 25 | 50 | 100) ? rawPageSize : 25;
+
+  // Build where clause
+  const where: Record<string, unknown> = {
+    userId: session.user.id,
+    archivedAt: null,
+  };
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { address: { contains: search, mode: "insensitive" } },
+      { city: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  if (type && type !== "all") {
+    where.type = parseInt(type, 10);
+  }
+
+  const skip = (page - 1) * pageSize;
+
+  const [totalCount, properties] = await Promise.all([
+    prisma.property.count({ where }),
+    prisma.property.findMany({
+      where,
+      include: {
+        _count: { select: { units: true } },
+        units: { select: { isRented: true } },
+      },
+      orderBy: { name: "asc" },
+      skip,
+      take: pageSize,
+    }),
+  ]);
+
+  const filters = [
+    {
+      key: "search",
+      label: "Search",
+      type: "search" as const,
+      placeholder: "Name or address...",
     },
-    orderBy: { name: "asc" },
-  });
+    {
+      key: "type",
+      label: "Type",
+      type: "select" as const,
+      options: [
+        { value: "all", label: "All Types" },
+        { value: "1", label: "Single Family" },
+        { value: "2", label: "Multi-Family" },
+        { value: "3", label: "Commercial" },
+      ],
+    },
+  ];
 
   return (
     <div>
-      <SetPageContext label="/Properties" context={`Properties list: ${properties.length} properties. User can see property names, addresses, types, unit counts, and occupancy rates.`} />
+      <SetPageContext label="/Properties" context={`Properties list: ${totalCount} properties (page ${page}). User can see property names, addresses, types, unit counts, and occupancy rates.`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
         <Button asChild>
           <Link href="/properties/new">Add Property</Link>
         </Button>
       </div>
+
+      <ListFilters basePath="/properties" filters={filters} />
+
       {properties.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 mb-4">No properties yet. Add your first property to get started.</p>
+          <p className="text-gray-600 mb-4">No properties found. Try adjusting your filters or add a new property.</p>
           <Button asChild>
             <Link href="/properties/new">Add Property</Link>
           </Button>
@@ -142,6 +205,8 @@ export default async function PropertiesPage() {
           </div>
         </>
       )}
+
+      <Pagination totalCount={totalCount} page={page} pageSize={pageSize} basePath="/properties" />
     </div>
   );
 }
