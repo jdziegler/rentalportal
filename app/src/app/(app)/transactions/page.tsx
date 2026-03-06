@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { TransactionFilters } from "@/components/transaction-filters";
 import { Pagination } from "@/components/pagination";
 import { TRANSACTION_STATUS, statusLabels, statusStyles } from "@/lib/transaction-status";
+import { getSubcategoryLabel, getSubcategoryColor } from "@/lib/transaction-categories";
 import { SetPageContext } from "@/components/set-page-context";
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
@@ -227,12 +228,19 @@ export default async function TransactionsPage({
                         {t.date.toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
-                        <Link
-                          href={`/transactions/${t.id}`}
-                          className="text-blue-600 hover:underline font-medium"
-                        >
-                          {t.details || "\u2014"}
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/transactions/${t.id}`}
+                            className="text-blue-600 hover:underline font-medium"
+                          >
+                            {t.details || "\u2014"}
+                          </Link>
+                          {t.subcategory && (
+                            <Badge variant="secondary" className={`text-xs py-0 ${getSubcategoryColor(t.subcategory)}`}>
+                              {getSubcategoryLabel(t.subcategory)}
+                            </Badge>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-gray-700">
                         {t.property?.name || "\u2014"}
@@ -300,6 +308,14 @@ export default async function TransactionsPage({
                     >
                       {statusLabels[t.status] || "Unknown"}
                     </Badge>
+                    {t.subcategory && (
+                      <>
+                        <span>&middot;</span>
+                        <Badge variant="secondary" className={`text-xs py-0 ${getSubcategoryColor(t.subcategory)}`}>
+                          {getSubcategoryLabel(t.subcategory)}
+                        </Badge>
+                      </>
+                    )}
                     {Number(t.balance) > 0 && (
                       <>
                         <span>&middot;</span>

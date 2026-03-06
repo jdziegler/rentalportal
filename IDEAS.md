@@ -18,15 +18,15 @@ Prioritized work remaining, organized by phase.
 - [x] Recurring rent charges (auto-generate monthly)
 - [x] Late fee automation (one-time + daily accrual)
 - [x] Payment model (separate payment records from invoices)
-- [ ] Balance tracking per tenant/lease — running balance, aging buckets (current/30/60/90)
-- [ ] Balance visible on: tenant detail, lease detail, dashboard
-- [ ] Reports: rent roll (all active leases + balances) — CSV export
-- [ ] Reports: income & expense by property/month — CSV export
-- [ ] Reports: tenant statement (all charges + payments) — PDF export
-- [ ] Transaction categories with color coding (rent, late_fee, deposit, repair, utility, etc.)
-- [ ] Dashboard: upcoming rent due (next 7 days)
-- [ ] Dashboard: overdue balances (top 5 tenants)
-- [ ] Dashboard: trend arrows vs previous month
+- [x] Balance tracking per tenant/lease — running balance, aging buckets (current/30/60/90)
+- [x] Balance visible on: tenant detail, lease detail, dashboard
+- [x] Reports: rent roll (all active leases + balances) — CSV export
+- [x] Reports: income & expense by property/month — CSV export
+- [x] Reports: tenant statement (all charges + payments) — CSV export
+- [x] Transaction categories with color coding (rent, late_fee, deposit, repair, utility, etc.)
+- [x] Dashboard: upcoming rent due (next 7 days)
+- [x] Dashboard: overdue balances (top 5 tenants)
+- [x] Dashboard: trend arrows vs previous month
 
 ## Phase 3: Rent Collection
 

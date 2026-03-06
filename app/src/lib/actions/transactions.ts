@@ -26,6 +26,7 @@ export async function createTransaction(formData: FormData) {
     data: {
       userId,
       category: formData.get("category") as string,
+      subcategory: (formData.get("subcategory") as string) || null,
       amount,
       date: new Date(formData.get("date") as string),
       details: (formData.get("details") as string) || null,
@@ -67,6 +68,7 @@ export async function updateTransaction(id: string, formData: FormData) {
     where: { id, userId },
     data: {
       category: formData.get("category") as string,
+      subcategory: (formData.get("subcategory") as string) || null,
       amount,
       date: new Date(formData.get("date") as string),
       details: (formData.get("details") as string) || null,

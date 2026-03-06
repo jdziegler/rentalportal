@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,11 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getIncomeSubcategories, getExpenseSubcategories } from "@/lib/transaction-categories";
 
 interface TransactionFormProps {
   action: (formData: FormData) => void;
   defaultValues?: {
     category?: string;
+    subcategory?: string;
     amount?: string;
     date?: string;
     details?: string;
@@ -38,6 +41,9 @@ export function TransactionForm({
   properties,
   tenants,
 }: TransactionFormProps) {
+  const [category, setCategory] = useState(defaultValues?.category || "income");
+  const subcats = category === "income" ? getIncomeSubcategories() : getExpenseSubcategories();
+
   return (
     <form action={action} className="space-y-6 max-w-2xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -45,8 +51,9 @@ export function TransactionForm({
           <Label htmlFor="category">Category *</Label>
           <Select
             name="category"
-            defaultValue={defaultValues?.category || "income"}
+            defaultValue={category}
             required
+            onValueChange={setCategory}
           >
             <SelectTrigger>
               <SelectValue />
@@ -54,6 +61,25 @@ export function TransactionForm({
             <SelectContent>
               <SelectItem value="income">Income</SelectItem>
               <SelectItem value="expense">Expense</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="subcategory">Type</Label>
+          <Select
+            name="subcategory"
+            defaultValue={defaultValues?.subcategory || ""}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              {subcats.map(([key, val]) => (
+                <SelectItem key={key} value={key}>
+                  {val.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

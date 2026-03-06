@@ -57,6 +57,7 @@ export default async function EditTransactionPage({
           action={updateWithId}
           defaultValues={{
             category: transaction.category,
+            subcategory: transaction.subcategory || "",
             amount: Number(transaction.amount).toString(),
             date: transaction.date.toISOString().split("T")[0],
             details: transaction.details || "",

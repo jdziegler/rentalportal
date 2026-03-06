@@ -197,6 +197,7 @@ model Transaction {
   leaseId     String?
   contactId   String?
   category    String   // income, expense
+  subcategory String?  // rent, late_fee, deposit, repair, utility, insurance, management, other
   amount      Decimal  @db.Decimal(10, 2)
   currency    String   @default("USD")
   date        DateTime

@@ -9,6 +9,7 @@ import { DeleteTransactionButton } from "./delete-button";
 import { TransactionActions } from "./transaction-actions";
 import { PaymentHistory } from "./payment-history";
 import { statusLabels, statusStyles } from "@/lib/transaction-status";
+import { getSubcategoryLabel, getSubcategoryColor } from "@/lib/transaction-categories";
 import { SetPageContext } from "@/components/set-page-context";
 
 const paymentMethods: Record<string, string> = {
@@ -113,6 +114,16 @@ export default async function TransactionDetailPage({
                   </Badge>
                 </dd>
               </div>
+              {transaction.subcategory && (
+                <div className="flex justify-between">
+                  <dt className="text-gray-600">Type</dt>
+                  <dd>
+                    <Badge variant="secondary" className={getSubcategoryColor(transaction.subcategory)}>
+                      {getSubcategoryLabel(transaction.subcategory)}
+                    </Badge>
+                  </dd>
+                </div>
+              )}
               <div className="flex justify-between">
                 <dt className="text-gray-600">Status</dt>
                 <dd>
