@@ -5,12 +5,26 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
 import { statusLabels } from "@/lib/transaction-status";
+import { IncomeChart } from "@/components/income-chart";
 
-export default async function DashboardPage() {
+const chartRanges = [
+  { value: "7d", label: "7 Days" },
+  { value: "30d", label: "30 Days" },
+  { value: "3m", label: "3 Months" },
+  { value: "6m", label: "6 Months" },
+];
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ chartRange?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const userId = session.user.id;
+  const params = await searchParams;
+  const chartRange = params.chartRange || "30d";
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -126,6 +140,9 @@ export default async function DashboardPage() {
   const lastExpenses = Number(lastMonthExpenses._sum.amount || 0);
   const occupancyRate = unitCount > 0 ? Math.round((occupiedCount / unitCount) * 100) : 0;
 
+  // Chart data query
+  const chartData = await buildChartData(userId, chartRange, now);
+
   return (
     <div>
       <SetPageContext label="/Dashboard" context={`Dashboard: ${propertyCount} properties, ${unitCount} units (${occupancyRate}% occupied), ${leaseCount} active leases, ${tenantCount} tenants. MTD income: $${income.toLocaleString()}, expenses: $${expenses.toLocaleString()}.`} />
@@ -150,6 +167,11 @@ export default async function DashboardPage() {
           trend={lastExpenses > 0 ? ((expenses - lastExpenses) / lastExpenses) * 100 : undefined}
           invertTrend
         />
+      </div>
+
+      {/* Income & Expenses Chart */}
+      <div className="mb-8">
+        <IncomeChart data={chartData} range={chartRange} ranges={chartRanges} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -377,4 +399,97 @@ function StatCard({
     );
   }
   return content;
+}
+
+async function buildChartData(
+  userId: string,
+  range: string,
+  now: Date,
+): Promise<{ label: string; income: number; expense: number }[]> {
+  let startDate: Date;
+  let groupByDay = false;
+
+  switch (range) {
+    case "7d":
+      startDate = new Date(now.getTime() - 7 * 86400000);
+      groupByDay = true;
+      break;
+    case "30d":
+      startDate = new Date(now.getTime() - 30 * 86400000);
+      groupByDay = true;
+      break;
+    case "3m":
+      startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+      break;
+    case "6m":
+      startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+      break;
+    default:
+      startDate = new Date(now.getTime() - 30 * 86400000);
+      groupByDay = true;
+  }
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      date: { gte: startDate },
+    },
+    select: { date: true, category: true, amount: true },
+  });
+
+  const buckets = new Map<string, { income: number; expense: number }>();
+
+  for (const t of transactions) {
+    const key = groupByDay
+      ? t.date.toISOString().split("T")[0]
+      : `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, "0")}`;
+
+    const entry = buckets.get(key) || { income: 0, expense: 0 };
+    if (t.category === "income") {
+      entry.income += Number(t.amount);
+    } else {
+      entry.expense += Number(t.amount);
+    }
+    buckets.set(key, entry);
+  }
+
+  // Fill in missing days/months
+  if (groupByDay) {
+    const cursor = new Date(startDate);
+    while (cursor <= now) {
+      const key = cursor.toISOString().split("T")[0];
+      if (!buckets.has(key)) {
+        buckets.set(key, { income: 0, expense: 0 });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  } else {
+    const cursor = new Date(startDate);
+    while (cursor <= now) {
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`;
+      if (!buckets.has(key)) {
+        buckets.set(key, { income: 0, expense: 0 });
+      }
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+  }
+
+  const sorted = [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+  return sorted.map(([key, val]) => {
+    let label: string;
+    if (groupByDay) {
+      const d = new Date(key + "T12:00:00");
+      label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    } else {
+      const [y, m] = key.split("-");
+      const d = new Date(parseInt(y), parseInt(m) - 1);
+      label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+    }
+    return {
+      label,
+      income: Math.round(val.income * 100) / 100,
+      expense: Math.round(val.expense * 100) / 100,
+    };
+  });
 }
