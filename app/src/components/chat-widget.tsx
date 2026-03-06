@@ -290,7 +290,7 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
               }}
               placeholder="Ask something..."
               disabled={loading}
-              className="flex-1 px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+              className="flex-1 px-3.5 py-2 text-base sm:text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
             />
             <button
               onClick={() => {
