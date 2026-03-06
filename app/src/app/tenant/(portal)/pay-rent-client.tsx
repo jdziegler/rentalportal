@@ -45,6 +45,8 @@ export default function PayRentClient({
   const searchParams = useSearchParams();
   const [selectedLease, setSelectedLease] = useState(leases[0]?.id || "");
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [payingAmount, setPayingAmount] = useState(0);
+  const [showMethodPicker, setShowMethodPicker] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -52,7 +54,6 @@ export default function PayRentClient({
     const payment = searchParams.get("payment");
     if (payment === "success") {
       setSuccessMsg("Payment submitted successfully! It may take a moment to process.");
-      // Clean URL
       window.history.replaceState({}, "", "/tenant/portal");
     } else if (payment === "cancelled") {
       setError("Payment was cancelled.");
@@ -65,35 +66,58 @@ export default function PayRentClient({
   const unpaidTransactions = leaseTransactions.filter((t) => t.status === 0 || t.status === 1);
   const totalOwed = unpaidTransactions.reduce((sum, t) => sum + t.balance, 0);
 
-  async function handlePay(transactionId: string, amount: number) {
+  function startPay(transactionId: string, amount: number) {
     setError("");
     setPayingId(transactionId);
+    setPayingAmount(amount);
+    setShowMethodPicker(true);
+  }
+
+  async function handlePay(paymentMethod: "ach" | "card") {
+    if (!payingId) return;
+    setShowMethodPicker(false);
+    setError("");
 
     try {
       const res = await fetch("/api/tenant/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionId, amount }),
+        body: JSON.stringify({
+          transactionId: payingId,
+          amount: payingAmount,
+          paymentMethod,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         setError(data.error || "Payment failed");
+        setPayingId(null);
         return;
       }
 
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
+        setPayingId(null);
         router.refresh();
       }
     } catch {
       setError("Network error. Please try again.");
-    } finally {
       setPayingId(null);
     }
   }
+
+  function cancelPay() {
+    setShowMethodPicker(false);
+    setPayingId(null);
+    setPayingAmount(0);
+  }
+
+  // Fee calculations for display
+  const achFee = 1.95;
+  const cardFee = payingAmount * 0.035 + 0.30;
 
   if (leases.length === 0) {
     return (
@@ -147,13 +171,13 @@ export default function PayRentClient({
                 <button
                   onClick={() => {
                     if (unpaidTransactions[0]) {
-                      handlePay(unpaidTransactions[0].id, totalOwed);
+                      startPay(unpaidTransactions[0].id, totalOwed);
                     }
                   }}
                   disabled={payingId !== null}
                   className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50"
                 >
-                  {payingId ? "Processing..." : "Pay Now"}
+                  {payingId && !showMethodPicker ? "Processing..." : "Pay Now"}
                 </button>
               </div>
             </div>
@@ -164,6 +188,74 @@ export default function PayRentClient({
               <p className="text-sm font-medium text-green-800">All caught up! No balance due.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Payment method picker */}
+      {showMethodPicker && (
+        <div className="bg-white rounded-lg border-2 border-blue-200 p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-900">
+              Choose Payment Method
+            </h3>
+            <button
+              onClick={cancelPay}
+              className="text-sm text-gray-400 hover:text-gray-600"
+            >
+              Cancel
+            </button>
+          </div>
+          <p className="text-xs text-gray-500">
+            Paying ${payingAmount.toFixed(2)}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* ACH option */}
+            <button
+              onClick={() => handlePay("ach")}
+              className="border-2 border-gray-200 rounded-lg p-4 text-left hover:border-blue-400 hover:bg-blue-50 transition group"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-gray-600 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+                </svg>
+                <span className="font-semibold text-gray-900 group-hover:text-blue-700">
+                  Bank Transfer (ACH)
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">Direct from your bank account</p>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-sm font-bold text-green-600">$1.95 fee</span>
+                <span className="text-xs text-gray-400">
+                  Total: ${(payingAmount + achFee).toFixed(2)}
+                </span>
+              </div>
+            </button>
+
+            {/* Card option */}
+            <button
+              onClick={() => handlePay("card")}
+              className="border-2 border-gray-200 rounded-lg p-4 text-left hover:border-blue-400 hover:bg-blue-50 transition group"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-gray-600 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                </svg>
+                <span className="font-semibold text-gray-900 group-hover:text-blue-700">
+                  Credit / Debit Card
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">Visa, Mastercard, Amex</p>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">
+                  3.5% + $0.30 fee
+                </span>
+                <span className="text-xs text-gray-400">
+                  Total: ${(payingAmount + cardFee).toFixed(2)}
+                </span>
+              </div>
+            </button>
+          </div>
         </div>
       )}
 
@@ -207,11 +299,13 @@ export default function PayRentClient({
                     </span>
                     {(t.status === 0 || t.status === 1) && t.balance > 0 && (
                       <button
-                        onClick={() => handlePay(t.id, t.balance)}
+                        onClick={() => startPay(t.id, t.balance)}
                         disabled={payingId !== null}
                         className="text-xs bg-blue-600 text-white px-3 py-1 rounded font-medium hover:bg-blue-700 transition disabled:opacity-50"
                       >
-                        {payingId === t.id ? "..." : `Pay $${t.balance.toFixed(2)}`}
+                        {payingId === t.id && !showMethodPicker
+                          ? "..."
+                          : `Pay $${t.balance.toFixed(2)}`}
                       </button>
                     )}
                   </div>

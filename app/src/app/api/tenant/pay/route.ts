@@ -9,10 +9,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { transactionId, amount } = await req.json();
+  const { transactionId, amount, paymentMethod } = await req.json();
 
   if (!transactionId || !amount || amount <= 0) {
     return NextResponse.json({ error: "Invalid payment details" }, { status: 400 });
+  }
+
+  if (!paymentMethod || !["card", "ach"].includes(paymentMethod)) {
+    return NextResponse.json({ error: "Choose a payment method" }, { status: 400 });
   }
 
   // Find the transaction and verify it belongs to this tenant
@@ -32,12 +36,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
   }
 
-  // Verify the tenant owns this transaction
   if (!session.contactIds.includes(transaction.lease.contact.id)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  // Check if landlord has Stripe Connect set up
   const landlord = transaction.lease.user;
   if (!landlord.stripeConnectId || !landlord.stripeConnectOnboarded) {
     return NextResponse.json(
@@ -46,8 +48,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Create Stripe Checkout session
   const amountCents = Math.round(amount * 100);
+
+  // Calculate fee based on chosen payment method
+  const applicationFee =
+    paymentMethod === "ach"
+      ? CONNECT_FEES.ach
+      : Math.round(amountCents * (CONNECT_FEES.card_percent / 100) + CONNECT_FEES.card_fixed);
 
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -57,20 +64,16 @@ export async function POST(req: NextRequest) {
           currency: "usd",
           product_data: {
             name: transaction.details || "Rent Payment",
-            description: "Rent payment",
+            description: `Rent payment via ${paymentMethod === "ach" ? "bank transfer" : "card"}`,
           },
           unit_amount: amountCents,
         },
         quantity: 1,
       },
     ],
-    payment_method_types: ["card", "us_bank_account"],
+    payment_method_types: paymentMethod === "ach" ? ["us_bank_account"] : ["card"],
     payment_intent_data: {
-      // Platform fee: use card rate as ceiling since we don't know method yet
-      // Stripe charges processing fees separately to the connected account
-      application_fee_amount: Math.round(
-        amountCents * (CONNECT_FEES.card_percent / 100) + CONNECT_FEES.card_fixed
-      ),
+      application_fee_amount: applicationFee,
       transfer_data: {
         destination: landlord.stripeConnectId,
       },
@@ -78,6 +81,7 @@ export async function POST(req: NextRequest) {
         transactionId: transaction.id,
         leaseId: transaction.leaseId || "",
         tenantIdentifier: session.identifier,
+        paymentMethod,
       },
     },
     success_url: `${process.env.NEXTAUTH_URL}/tenant/portal?payment=success`,
