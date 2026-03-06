@@ -147,14 +147,14 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
           {/* Header */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
             <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-            <span className="text-sm font-semibold text-gray-900 flex-1 flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-900 flex-1">
               PropertyPilot AI
-              {pageContextData?.label && (
-                <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md truncate max-w-[140px]">
-                  {pageContextData.label}
-                </span>
-              )}
             </span>
+            {pageContextData?.label && (
+              <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md truncate max-w-[140px] shrink-0">
+                {pageContextData.label}
+              </span>
+            )}
             {messages.length > 0 && (
               <button
                 onClick={clearHistory}
