@@ -275,6 +275,11 @@ export function ChatWidget({ storageKey = "pp-chat" }: { storageKey?: string }) 
             <input
               ref={inputRef}
               type="text"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-form-type="other"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
