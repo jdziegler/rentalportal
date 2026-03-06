@@ -104,15 +104,15 @@ These make the app actually useful for managing rentals day-to-day.
 - [x] Widget showing leases expiring in next 30 days
 - [ ] Quick action to renew or terminate
 
-### T2-5: Search & Filter on All List Pages ✅ (partial)
+### T2-5: Search & Filter on All List Pages ✅
 - [x] Tenant search by name, email, phone + status filter
 - [x] Transaction filters: category, status, date range (presets + custom), property, contact
 - [x] Global command palette search (Cmd+K) across all entities
-- [ ] Filters on Properties, Units, Leases, Listings, Maintenance list pages
+- [x] Filters on Properties, Units, Leases, Listings, Maintenance list pages
 
-### T2-6: Pagination on All List Pages (partial)
+### T2-6: Pagination on All List Pages ✅
 - [x] Transaction pagination with page size selector (25/50/100)
-- [ ] Pagination on Properties, Units, Tenants, Leases, Maintenance, Listings
+- [x] Pagination on Properties, Units, Tenants, Leases, Maintenance, Listings
 
 ### T2-7: Late Fee Configuration & Automation
 - Configure late fees per lease: one-time amount, daily amount, grace period, max daily limit
@@ -124,10 +124,10 @@ These make the app actually useful for managing rentals day-to-day.
 - Show balance on tenant detail and lease detail pages
 - Aging report: current, 30-day, 60-day, 90-day overdue buckets
 
-### T2-9: Lease Status Management
-- Ability to change lease status (active, expired, terminated)
-- Auto-expire leases when end date passes (or flag for review)
-- Mark unit as vacant when lease terminates/expires
+### T2-9: Lease Status Management ✅
+- [x] Ability to change lease status (active, expired, terminated)
+- [x] Auto-convert fixed-term leases to month-to-month when end date passes (cron job)
+- [ ] Mark unit as vacant when lease terminates/expires
 
 ### T2-10: Property/Unit Vacancy Tracking
 - Clearly display vacancy status on property and unit pages
@@ -199,10 +199,10 @@ These enable the core revenue flow for landlords.
 
 ## Tier 5: Reporting & Analytics
 
-### T5-1: Income & Expense Report
-- Monthly/quarterly/annual income and expense breakdown
-- Filter by property, unit, category
-- Exportable to CSV/PDF
+### T5-1: Income & Expense Report ✅
+- [x] Monthly/quarterly/annual income and expense breakdown
+- [x] Filter by property, date range (presets + custom)
+- [x] Exportable to CSV
 
 ### T5-2: Rent Roll Report
 - List of all active leases with: property, unit, tenant, rent amount, balance
@@ -279,9 +279,9 @@ These enable the core revenue flow for landlords.
 - [x] Mobile-responsive navigation (hamburger menu)
 - [x] Command palette (Cmd+K) with global search
 
-### T7-2: Empty States
-- [ ] Meaningful empty states on all list pages when no data exists
-- [ ] Call-to-action buttons ("Add your first property", etc.)
+### T7-2: Empty States ✅
+- [x] Meaningful empty states on all list pages when no data exists
+- [x] Call-to-action buttons ("Add your first property", etc.)
 - [ ] Onboarding guidance for new users
 
 ### T7-3: Loading States
