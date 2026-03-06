@@ -283,14 +283,28 @@ export async function processAutoPayments(): Promise<AutoPayResult> {
       // For card, it may already be "succeeded"
       const isPaid = paymentIntent.status === "succeeded";
       const isProcessing = paymentIntent.status === "processing";
+      const payMethod =
+        autoPay.paymentMethodType === "us_bank_account" ? "ach" : "card";
+
+      // Create a Payment record
+      await prisma.payment.create({
+        data: {
+          transactionId: txn.id,
+          amount: Number(txn.amount),
+          date: new Date(),
+          method: payMethod,
+          stripePaymentIntentId: paymentIntent.id,
+          stripePaymentStatus: paymentIntent.status,
+          note: "Auto-pay",
+        },
+      });
 
       await prisma.transaction.update({
         where: { id: txn.id },
         data: {
           stripePaymentIntentId: paymentIntent.id,
           stripePaymentStatus: paymentIntent.status,
-          paymentMethod:
-            autoPay.paymentMethodType === "us_bank_account" ? "ach" : "card",
+          paymentMethod: payMethod,
           status: isPaid ? 2 : isProcessing ? 3 : 0,
           paid: isPaid ? txn.amount : 0,
           balance: isPaid ? 0 : txn.amount,

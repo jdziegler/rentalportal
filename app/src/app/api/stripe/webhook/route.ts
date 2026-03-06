@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
+import { recalcTransactionFromPayments } from "@/lib/payment-helpers";
 import Stripe from "stripe";
 
 export async function POST(req: Request) {
@@ -113,28 +114,59 @@ export async function POST(req: Request) {
       });
       if (txn) {
         const paidAmount = Number(obj.amount) / 100;
-        await prisma.transaction.update({
-          where: { id: txn.id },
-          data: {
+
+        // Create a Payment record
+        await prisma.payment.upsert({
+          where: { stripePaymentIntentId: obj.id },
+          create: {
+            transactionId: txn.id,
+            amount: paidAmount,
+            date: new Date(),
+            method: obj.payment_method_types?.[0] === "us_bank_account" ? "ach" : "card",
+            stripePaymentIntentId: obj.id,
             stripePaymentStatus: "succeeded",
-            status: 2, // PAID
-            paid: paidAmount,
-            balance: 0,
-            paidAt: new Date(),
+          },
+          update: {
+            stripePaymentStatus: "succeeded",
+            amount: paidAmount,
           },
         });
+
+        // Recalc transaction from payments
+        await recalcTransactionFromPayments(txn.id);
       }
       break;
     }
 
     case "payment_intent.processing": {
-      await prisma.transaction.updateMany({
+      const txn = await prisma.transaction.findFirst({
         where: { stripePaymentIntentId: obj.id },
-        data: {
-          stripePaymentStatus: "processing",
-          status: 3, // PENDING
-        },
       });
+      if (txn) {
+        // Create a pending Payment record
+        await prisma.payment.upsert({
+          where: { stripePaymentIntentId: obj.id },
+          create: {
+            transactionId: txn.id,
+            amount: Number(obj.amount) / 100,
+            date: new Date(),
+            method: obj.payment_method_types?.[0] === "us_bank_account" ? "ach" : "card",
+            stripePaymentIntentId: obj.id,
+            stripePaymentStatus: "processing",
+          },
+          update: {
+            stripePaymentStatus: "processing",
+          },
+        });
+
+        await prisma.transaction.update({
+          where: { id: txn.id },
+          data: {
+            stripePaymentStatus: "processing",
+            status: 3, // PENDING
+          },
+        });
+      }
       break;
     }
 
@@ -143,16 +175,20 @@ export async function POST(req: Request) {
         where: { stripePaymentIntentId: obj.id },
       });
       if (failedTxn) {
-        await prisma.transaction.update({
-          where: { id: failedTxn.id },
-          data: {
-            stripePaymentStatus: "failed",
-            status: 0, // UNPAID
-            paid: 0,
-            balance: failedTxn.amount,
-            paidAt: null,
+        // Remove the failed payment record so it doesn't count toward paid
+        await prisma.payment.deleteMany({
+          where: {
+            stripePaymentIntentId: obj.id,
+            transactionId: failedTxn.id,
           },
         });
+
+        await prisma.transaction.update({
+          where: { id: failedTxn.id },
+          data: { stripePaymentStatus: "failed" },
+        });
+
+        await recalcTransactionFromPayments(failedTxn.id);
       }
       break;
     }
@@ -165,16 +201,20 @@ export async function POST(req: Request) {
           where: { stripePaymentIntentId: paymentIntentId },
         });
         if (achTxn) {
-          await prisma.transaction.update({
-            where: { id: achTxn.id },
-            data: {
-              stripePaymentStatus: "failed",
-              status: 0, // UNPAID
-              paid: 0,
-              balance: achTxn.amount,
-              paidAt: null,
+          // Remove the failed payment
+          await prisma.payment.deleteMany({
+            where: {
+              stripePaymentIntentId: paymentIntentId,
+              transactionId: achTxn.id,
             },
           });
+
+          await prisma.transaction.update({
+            where: { id: achTxn.id },
+            data: { stripePaymentStatus: "failed" },
+          });
+
+          await recalcTransactionFromPayments(achTxn.id);
         }
       }
       break;

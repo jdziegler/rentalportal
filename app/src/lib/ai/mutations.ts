@@ -92,6 +92,7 @@ export async function executeMutations(
         case "mark_transaction_paid": {
           const tx = await prisma.transaction.findFirst({
             where: { id: mut.id, userId },
+            include: { payments: { select: { amount: true, type: true } } },
           });
           if (!tx) {
             results.push({
@@ -100,6 +101,21 @@ export async function executeMutations(
               detail: `Transaction ${mut.id} not found`,
             });
             break;
+          }
+          // Calculate remaining balance and create payment for it
+          const totalPaid = tx.payments
+            .filter((p) => p.type === "payment")
+            .reduce((sum, p) => sum + Number(p.amount), 0);
+          const remaining = Number(tx.amount) - totalPaid;
+          if (remaining > 0) {
+            await prisma.payment.create({
+              data: {
+                transactionId: mut.id as string,
+                amount: remaining,
+                date: new Date(),
+                note: "Marked as paid via AI",
+              },
+            });
           }
           await prisma.transaction.update({
             where: { id: mut.id },

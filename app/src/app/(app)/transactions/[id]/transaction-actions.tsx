@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,7 @@ export function TransactionActions({
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentNote, setPaymentNote] = useState("");
 
   const canRecordPayment = status < TRANSACTION_STATUS.PAID && balance > 0;
   const canMarkPaid = status < TRANSACTION_STATUS.PAID;
@@ -66,10 +68,11 @@ export function TransactionActions({
     const amt = parseFloat(paymentAmount);
     if (!amt || amt <= 0) return;
     startTransition(async () => {
-      await recordPayment(id, amt, paymentMethod || undefined);
+      await recordPayment(id, amt, paymentMethod || undefined, paymentNote || undefined);
       setShowPaymentDialog(false);
       setPaymentAmount("");
       setPaymentMethod("");
+      setPaymentNote("");
       router.refresh();
     });
   }
@@ -186,6 +189,16 @@ export function TransactionActions({
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="paymentNote">Note (optional)</Label>
+              <Textarea
+                id="paymentNote"
+                value={paymentNote}
+                onChange={(e) => setPaymentNote(e.target.value)}
+                placeholder="e.g. Check #1234, Venmo reference..."
+                rows={2}
+              />
             </div>
           </div>
           <DialogFooter>

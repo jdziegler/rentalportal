@@ -5,20 +5,12 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { TRANSACTION_STATUS } from "@/lib/transaction-status";
+import { recalcTransactionFromPayments } from "@/lib/payment-helpers";
 
 async function getUserId() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Not authenticated");
   return session.user.id;
-}
-
-/** Convert dollars to cents to avoid floating point issues */
-function toCents(value: number): number {
-  return Math.round(value * 100);
-}
-
-function fromCents(cents: number): number {
-  return cents / 100;
 }
 
 export async function createTransaction(formData: FormData) {
@@ -28,7 +20,6 @@ export async function createTransaction(formData: FormData) {
   const statusStr = formData.get("status") as string;
   const status = statusStr ? parseInt(statusStr) : TRANSACTION_STATUS.UNPAID;
 
-  // If marked as paid on creation, set paid = amount, balance = 0
   const isPaid = status === TRANSACTION_STATUS.PAID;
 
   const transaction = await prisma.transaction.create({
@@ -50,6 +41,19 @@ export async function createTransaction(formData: FormData) {
     },
   });
 
+  // If created as paid, also create a Payment record
+  if (isPaid) {
+    await prisma.payment.create({
+      data: {
+        transactionId: transaction.id,
+        amount,
+        date: new Date(),
+        method: (formData.get("paymentMethod") as string) || null,
+        note: "Initial payment on creation",
+      },
+    });
+  }
+
   revalidatePath("/transactions");
   redirect(`/transactions/${transaction.id}?toast=Transaction+created`);
 }
@@ -58,28 +62,6 @@ export async function updateTransaction(id: string, formData: FormData) {
   const userId = await getUserId();
 
   const amount = parseFloat(formData.get("amount") as string) || 0;
-
-  // Get current transaction to preserve payment state
-  const current = await prisma.transaction.findUniqueOrThrow({
-    where: { id, userId },
-  });
-
-  // Recalculate balance if amount changed (use cents to avoid floating point)
-  const paidCents = toCents(Number(current.paid));
-  const amountCents = toCents(amount);
-  const newBalanceCents = Math.max(0, amountCents - paidCents);
-  let newStatus = current.status;
-
-  // Update status based on new amount vs existing payments
-  if (current.status <= 2) {
-    if (paidCents >= amountCents && amountCents > 0) {
-      newStatus = TRANSACTION_STATUS.PAID;
-    } else if (paidCents > 0) {
-      newStatus = TRANSACTION_STATUS.PARTIAL;
-    } else {
-      newStatus = TRANSACTION_STATUS.UNPAID;
-    }
-  }
 
   await prisma.transaction.update({
     where: { id, userId },
@@ -93,44 +75,46 @@ export async function updateTransaction(id: string, formData: FormData) {
       unitId: (formData.get("unitId") as string) || null,
       contactId: (formData.get("contactId") as string) || null,
       paymentMethod: (formData.get("paymentMethod") as string) || null,
-      balance: fromCents(newBalanceCents),
-      status: newStatus,
     },
   });
+
+  // Recalc from payments since amount may have changed
+  await recalcTransactionFromPayments(id);
 
   revalidatePath(`/transactions/${id}`);
   revalidatePath("/transactions");
   redirect(`/transactions/${id}?toast=Transaction+updated`);
 }
 
-export async function recordPayment(id: string, paymentAmount: number, paymentMethod?: string) {
+export async function recordPayment(
+  id: string,
+  paymentAmount: number,
+  paymentMethod?: string,
+  paymentNote?: string,
+) {
   const userId = await getUserId();
 
   const transaction = await prisma.transaction.findUniqueOrThrow({
     where: { id, userId },
   });
 
-  if (transaction.status >= 4) {
+  if (transaction.status >= TRANSACTION_STATUS.WAIVED) {
     throw new Error("Cannot record payment on waived or voided transaction");
   }
 
-  const currentPaidCents = toCents(Number(transaction.paid));
-  const totalAmountCents = toCents(Number(transaction.amount));
-  const paymentCents = toCents(paymentAmount);
-  const newPaidCents = Math.min(currentPaidCents + paymentCents, totalAmountCents);
-  const newBalanceCents = Math.max(0, totalAmountCents - newPaidCents);
-  const isFullyPaid = newBalanceCents === 0;
-
-  await prisma.transaction.update({
-    where: { id, userId },
+  // Create the Payment record
+  await prisma.payment.create({
     data: {
-      paid: fromCents(newPaidCents),
-      balance: fromCents(newBalanceCents),
-      status: isFullyPaid ? TRANSACTION_STATUS.PAID : TRANSACTION_STATUS.PARTIAL,
-      paidAt: isFullyPaid ? new Date() : transaction.paidAt,
-      paymentMethod: paymentMethod || transaction.paymentMethod,
+      transactionId: id,
+      amount: paymentAmount,
+      date: new Date(),
+      method: paymentMethod || null,
+      note: paymentNote || null,
     },
   });
+
+  // Recalc cached fields from all payments
+  await recalcTransactionFromPayments(id);
 
   revalidatePath(`/transactions/${id}`);
   revalidatePath("/transactions");
@@ -141,17 +125,28 @@ export async function markAsPaid(id: string) {
 
   const transaction = await prisma.transaction.findUniqueOrThrow({
     where: { id, userId },
+    include: { payments: { select: { amount: true, type: true } } },
   });
 
-  await prisma.transaction.update({
-    where: { id, userId },
-    data: {
-      paid: transaction.amount,
-      balance: 0,
-      status: TRANSACTION_STATUS.PAID,
-      paidAt: new Date(),
-    },
-  });
+  // Calculate remaining balance
+  const totalPaid = transaction.payments
+    .filter((p) => p.type === "payment")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+  const remaining = Number(transaction.amount) - totalPaid;
+
+  if (remaining > 0) {
+    // Create a payment for the remaining balance
+    await prisma.payment.create({
+      data: {
+        transactionId: id,
+        amount: remaining,
+        date: new Date(),
+        note: "Marked as paid",
+      },
+    });
+  }
+
+  await recalcTransactionFromPayments(id);
 
   revalidatePath(`/transactions/${id}`);
   revalidatePath("/transactions");
@@ -173,10 +168,6 @@ export async function markAsPending(id: string) {
 
 export async function waiveTransaction(id: string) {
   const userId = await getUserId();
-
-  const transaction = await prisma.transaction.findUniqueOrThrow({
-    where: { id, userId },
-  });
 
   await prisma.transaction.update({
     where: { id, userId },
@@ -202,6 +193,24 @@ export async function voidTransaction(id: string) {
   });
 
   revalidatePath(`/transactions/${id}`);
+  revalidatePath("/transactions");
+}
+
+export async function deletePayment(paymentId: string, transactionId: string) {
+  const userId = await getUserId();
+
+  // Verify transaction belongs to user
+  await prisma.transaction.findUniqueOrThrow({
+    where: { id: transactionId, userId },
+  });
+
+  await prisma.payment.delete({
+    where: { id: paymentId },
+  });
+
+  await recalcTransactionFromPayments(transactionId);
+
+  revalidatePath(`/transactions/${transactionId}`);
   revalidatePath("/transactions");
 }
 

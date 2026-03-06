@@ -174,13 +174,13 @@ Goal: A landlord can track all money in and out without a spreadsheet.
 - [ ] Overdue balances (top 5 tenants)
 
 ### 2.2 Recurring Charges
-- [ ] Auto-generate monthly rent charges from active leases
-- [ ] Cron job or scheduled function: run daily, create charges on due date
+- [x] Auto-generate monthly rent charges from active leases
+- [x] Cron job or scheduled function: run daily, create charges on due date
 - [ ] Support other recurring charges (utilities, fees) per lease
 
 ### 2.3 Late Fees
-- [ ] Late fee configuration per lease (amount, grace days, one-time vs daily)
-- [ ] Auto-apply late fee after grace period
+- [x] Late fee configuration per lease (amount, grace days, one-time vs daily)
+- [x] Auto-apply late fee after grace period
 - [ ] Late fee visible on tenant balance and lease detail
 
 ### 2.4 Balance Tracking

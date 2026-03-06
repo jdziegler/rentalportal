@@ -229,8 +229,27 @@ model Transaction {
   contact  Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
   parent   Transaction?  @relation("LateFeeParent", fields: [parentId], references: [id], onDelete: SetNull)
   lateFees Transaction[] @relation("LateFeeParent")
+  payments Payment[]
 
   @@unique([leaseId, billingPeriod, source], name: "lease_period_source_unique")
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  transactionId String
+  amount        Decimal  @db.Decimal(10, 2)
+  date          DateTime @default(now())
+  method        String?  // cash, check, ach, card, other
+  note          String?
+  type          String   @default("payment") // payment, refund
+
+  // Stripe tracking (one PaymentIntent per payment)
+  stripePaymentIntentId String?  @unique
+  stripePaymentStatus   String?  // succeeded, processing, failed
+
+  createdAt DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 }
 
 model Listing {
