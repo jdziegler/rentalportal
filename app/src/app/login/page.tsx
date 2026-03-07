@@ -1,6 +1,9 @@
 import { signIn } from "@/lib/auth";
+import { TestLogin } from "./test-login";
 
 export default function LoginPage() {
+  const isDev = process.env.NODE_ENV !== "production";
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm text-center">
@@ -39,6 +42,19 @@ export default function LoginPage() {
             Sign in with Google
           </button>
         </form>
+        {isDev && (
+          <>
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-2 text-gray-400">Dev only</span>
+              </div>
+            </div>
+            <TestLogin />
+          </>
+        )}
       </div>
     </div>
   );
