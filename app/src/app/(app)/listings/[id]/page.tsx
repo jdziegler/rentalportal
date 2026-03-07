@@ -94,9 +94,10 @@ export default async function ListingDetailPage({
             Description
           </h2>
           {listing.description ? (
-            <p className="text-gray-700 whitespace-pre-wrap">
-              {listing.description}
-            </p>
+            <div
+              className="text-gray-700 prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: listing.description }}
+            />
           ) : (
             <p className="text-gray-500 italic">No description provided.</p>
           )}

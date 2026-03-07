@@ -141,15 +141,18 @@ export default async function DashboardPage({
   const lastExpenses = Number(lastMonthExpenses._sum.amount || 0);
   const occupancyRate = unitCount > 0 ? Math.round((occupiedCount / unitCount) * 100) : 0;
 
-  // Onboarding: show checklist until all setup steps are complete
-  const hasStripeConnect = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { stripeConnectOnboarded: true },
-  });
-  const allSetupDone = propertyCount > 0 && unitCount > 0 && tenantCount > 0 && leaseCount > 0 && hasStripeConnect?.stripeConnectOnboarded === true;
-  const onboardingSteps = !allSetupDone
-    ? buildOnboardingSteps(propertyCount, unitCount, leaseCount, tenantCount, hasStripeConnect?.stripeConnectOnboarded === true)
-    : null;
+  // Onboarding: only show for genuinely new users (no properties yet)
+  let onboardingSteps = null;
+  if (propertyCount === 0) {
+    const hasStripeConnect = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { stripeConnectOnboarded: true },
+    });
+    onboardingSteps = buildOnboardingSteps(
+      propertyCount, unitCount, leaseCount, tenantCount,
+      hasStripeConnect?.stripeConnectOnboarded === true,
+    );
+  }
 
   // Chart data query
   const chartData = await buildChartData(userId, chartRange, now);
@@ -171,13 +174,13 @@ export default async function DashboardPage({
         <StatCard title="Tenants" value={tenantCount} href="/tenants" />
         <StatCard
           title="Income (MTD)"
-          value={`$${income.toLocaleString()}`}
+          value={`$${income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           className="text-green-600"
           trend={lastIncome > 0 ? ((income - lastIncome) / lastIncome) * 100 : undefined}
         />
         <StatCard
           title="Expenses (MTD)"
-          value={`$${expenses.toLocaleString()}`}
+          value={`$${expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           className="text-red-600"
           trend={lastExpenses > 0 ? ((expenses - lastExpenses) / lastExpenses) * 100 : undefined}
           invertTrend

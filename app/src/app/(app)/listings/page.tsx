@@ -95,7 +95,7 @@ export default async function ListingsPage({
                   {l.property.name} — {l.unit.name}
                 </h3>
                 <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                  {l.description || "No description"}
+                  {l.description ? l.description.replace(/<[^>]*>/g, "") : "No description"}
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-xl font-bold text-blue-600">

@@ -21,6 +21,8 @@ export function Pagination({ totalCount, page, pageSize, basePath = "/transactio
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  if (totalCount === 0) return null;
+
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const start = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, totalCount);
