@@ -155,6 +155,7 @@ model Contact {
   maintenanceRequests MaintenanceRequest[]
   autoPayConfigs AutoPayConfig[]
   messages       Message[]
+  signatures     Signature[]
 }
 
 model Lease {
@@ -193,6 +194,7 @@ model Lease {
   transactions Transaction[]
   autoPayConfig AutoPayConfig?
   messages      Message[]
+  documents     LeaseDocument[]
 }
 
 model Transaction {
@@ -351,6 +353,46 @@ model Message {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
   lease   Lease?  @relation(fields: [leaseId], references: [id], onDelete: SetNull)
+}
+
+// ── Lease Documents & E-Signatures ──
+
+model LeaseDocument {
+  id         String   @id @default(cuid())
+  leaseId    String
+  userId     String   // landlord who uploaded
+  name       String   // original filename
+  fileType   String   // mime type (application/pdf, image/jpeg, etc.)
+  fileSize   Int      // bytes
+  filePath   String   // path on disk (uploads/<userId>/<id>.<ext>)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  lease      Lease      @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  signatures Signature[]
+
+  @@index([leaseId])
+}
+
+model Signature {
+  id          String    @id @default(cuid())
+  documentId  String
+  contactId   String    // tenant who needs to sign
+  status      String    @default("pending") // pending, signed, declined
+  signedAt    DateTime?
+  declinedAt  DateTime?
+  ipAddress   String?   // audit trail
+  userAgent   String?   // audit trail
+  signatureData String? // base64 PNG of drawn signature
+  signingToken  String  @unique @default(uuid()) // unique link for tenant
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  document LeaseDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  contact  Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, contactId])
+  @@index([signingToken])
 }
 
 model CronJobLog {

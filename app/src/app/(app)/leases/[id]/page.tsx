@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { DeleteLeaseButton } from "./delete-button";
 import { terminateLease, renewLease } from "@/lib/actions/leases";
 import { SetPageContext } from "@/components/set-page-context";
+import LeaseDocuments from "@/components/lease-documents";
 
 const leaseTypeLabels: Record<number, string> = {
   1: "Fixed",
@@ -329,6 +330,13 @@ export default async function LeaseDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Documents & E-Signatures */}
+      <LeaseDocuments
+        leaseId={id}
+        contactId={lease.contact.id}
+        contactName={tenantName}
+      />
 
       {/* Recent Transactions */}
       {recentTransactions.length > 0 && (

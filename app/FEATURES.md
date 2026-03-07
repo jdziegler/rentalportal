@@ -12,15 +12,15 @@ Automatically charge late fees when rent is overdue.
 - [x] 1.5 Tenant portal visibility — late fees labeled distinctly in payment history
 - [x] 1.6 Tests — 20 unit tests for calculation, trigger logic, edge cases (`src/lib/late-fees.test.ts`)
 
-## Feature 2: Lease Document Storage & E-Signatures [PLANNED]
+## Feature 2: Lease Document Storage & E-Signatures [DONE]
 Upload lease PDFs and collect e-signatures from tenants.
 
-- [ ] 2.1 Schema — Document and Signature models
-- [ ] 2.2 File upload infrastructure — local/S3 storage, upload/download/delete API
-- [ ] 2.3 Landlord document management UI — Documents tab on lease detail
-- [ ] 2.4 E-signature flow — signing link, signature pad, audit trail
-- [ ] 2.5 Tenant portal documents tab
-- [ ] 2.6 Tests
+- [x] 2.1 Schema — `LeaseDocument` and `Signature` models with audit trail fields (IP, user agent, timestamp)
+- [x] 2.2 File upload infrastructure — local disk storage (`uploads/`), upload/download/delete API (`/api/documents`, `/api/documents/[id]`), 10MB max, PDF/image/Word types
+- [x] 2.3 Landlord document management UI — Documents section on lease detail page (`components/lease-documents.tsx`) with upload, delete, request signature, copy signing link
+- [x] 2.4 E-signature flow — `/sign` page with canvas signature pad, token-based signing links, `/api/sign` endpoint, sign/decline with audit trail
+- [x] 2.5 Tenant portal documents tab — `/tenant/documents` page showing pending & completed signatures with "Review & Sign" links
+- [x] 2.6 Tests — 19 unit tests for document CRUD, signature lifecycle, file validation, access control (`src/lib/documents.test.ts`)
 
 ## Feature 3: Tenant Screening Integration [PLANNED]
 Credit checks, background checks, eviction history via third-party provider.
@@ -33,15 +33,15 @@ Credit checks, background checks, eviction history via third-party provider.
 - [ ] 3.6 Application integration
 - [ ] 3.7 Tests
 
-## Feature 4: Accounting Export (CSV & QuickBooks) [PLANNED]
+## Feature 4: Accounting Export (CSV & QuickBooks) [DONE]
 Export financial data for accountants.
 
-- [ ] 4.1 Enhanced CSV export engine — `src/lib/export.ts`
-- [ ] 4.2 Export API endpoints — transactions, rent roll, tenant ledger, 1099
-- [ ] 4.3 Export UI — dropdown buttons, date range picker
-- [ ] 4.4 QuickBooks Online integration — OAuth, sync, account mapping
-- [ ] 4.5 QuickBooks settings UI
-- [ ] 4.6 Tests
+- [x] 4.1 Enhanced CSV export engine — `src/lib/export.ts` with csvEscape, buildCSV, csvResponse, formatDate, formatCurrency
+- [x] 4.2 Export API endpoints — `/api/export/transactions` (with filters), `/api/export/tenant-ledger` (per-tenant), plus existing rent-roll and income-expense
+- [x] 4.3 Export UI — "Export CSV" button on Transactions page (passes current filters) and Tenant Statement page
+- [ ] 4.4 QuickBooks Online integration — OAuth, sync, account mapping (future)
+- [ ] 4.5 QuickBooks settings UI (future)
+- [x] 4.6 Tests — 14 unit tests for CSV builder, escaping, date/currency formatting (`src/lib/export.test.ts`)
 
 ## Feature 5: Email & SMS Notifications [DONE]
 Automated notifications for rent reminders, maintenance updates, lease expirations.
