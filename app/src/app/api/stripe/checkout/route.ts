@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { stripe } from "@/lib/stripe";
+import { stripe, PLANS } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
@@ -12,6 +12,11 @@ export async function POST(req: Request) {
   const { priceId } = await req.json();
   if (!priceId) {
     return NextResponse.json({ error: "Missing priceId" }, { status: 400 });
+  }
+
+  // Validate priceId matches a known plan
+  if (priceId !== PLANS.pro.priceId) {
+    return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
   }
 
   const user = await prisma.user.findUniqueOrThrow({

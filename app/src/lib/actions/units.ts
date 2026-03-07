@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { checkPlanLimit } from "@/lib/subscription";
 
 async function getUserId() {
   const session = await auth();
@@ -15,6 +16,12 @@ export async function createUnit(formData: FormData) {
   const userId = await getUserId();
 
   const propertyId = formData.get("propertyId") as string;
+
+  // Check plan limit
+  const { allowed, current, limit } = await checkPlanLimit(userId, "units");
+  if (!allowed) {
+    redirect(`/units/new?toast=Plan+limit+reached+(${current}/${limit}+units).+Upgrade+to+Pro+for+more.&error=true`);
+  }
 
   // Verify property belongs to user
   const property = await prisma.property.findUnique({

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { checkPlanLimit } from "@/lib/subscription";
 
 async function getUserId() {
   const session = await auth();
@@ -34,6 +35,12 @@ export async function createLease(formData: FormData) {
   const lateFeeAccrual = (formData.get("lateFeeAccrual") as string) || "one_time";
   const lateFeeMaxRaw = formData.get("lateFeeMaxAmount") as string;
   const lateFeeMaxAmount = lateFeeMaxRaw ? parseFloat(lateFeeMaxRaw) : null;
+
+  // Check plan limit
+  const { allowed, current, limit } = await checkPlanLimit(userId, "leases");
+  if (!allowed) {
+    redirect(`/leases/new?toast=Plan+limit+reached+(${current}/${limit}+active+leases).+Upgrade+to+Pro+for+more.&error=true`);
+  }
 
   // Look up the unit to get propertyId
   const unit = await prisma.unit.findUniqueOrThrow({

@@ -491,6 +491,16 @@ model CronJobLog {
   completedAt DateTime?
 }
 
+// ── Stripe Webhook Idempotency ──
+
+model WebhookEvent {
+  id          String   @id // Stripe event ID (evt_xxx)
+  type        String
+  processedAt DateTime @default(now())
+
+  @@index([processedAt])
+}
+
 // ── Notifications ──
 
 model NotificationLog {
