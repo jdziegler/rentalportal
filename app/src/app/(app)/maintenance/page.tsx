@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
 import { ListFilters, type FilterConfig } from "@/components/list-filters";
 import { Pagination } from "@/components/pagination";
+import { EmptyState } from "@/components/empty-state";
 
 const priorityLabels: Record<number, string> = {
   0: "Low",
@@ -147,14 +148,13 @@ export default async function MaintenancePage({
       <ListFilters basePath="/maintenance" filters={filters} />
 
       {requests.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 mb-4">
-            No maintenance requests found. Try adjusting your filters.
-          </p>
-          <Button asChild>
-            <Link href="/maintenance/new">Create Request</Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon="maintenance"
+          title="No maintenance requests"
+          description="Track repair requests and work orders here. Tenants can also submit requests through their portal."
+          href="/maintenance/new"
+          cta="Create Request"
+        />
       ) : (
         <>
           <div className="hidden md:block bg-white rounded-lg shadow">

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
 import { ListFilters, type FilterConfig } from "@/components/list-filters";
 import { Pagination } from "@/components/pagination";
+import { EmptyState } from "@/components/empty-state";
 
 const leaseStatusLabels: Record<number, string> = {
   0: "Active",
@@ -122,14 +123,13 @@ export default async function LeasesPage({
       <ListFilters basePath="/leases" filters={filters} />
 
       {leases.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-500 mb-4">
-            No leases found. Try adjusting your filters or create a new lease.
-          </p>
-          <Button asChild>
-            <Link href="/leases/new">Add Lease</Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon="lease"
+          title="No leases yet"
+          description="Leases connect tenants to units with rent terms, dates, and late fee rules. Create your first lease to start tracking rent."
+          href="/leases/new"
+          cta="Create Lease"
+        />
       ) : (
         <>
           <div className="hidden md:block bg-white rounded-lg shadow">

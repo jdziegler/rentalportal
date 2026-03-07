@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
 import { ListFilters } from "@/components/list-filters";
 import { Pagination } from "@/components/pagination";
+import { EmptyState } from "@/components/empty-state";
 
 const propertyTypes: Record<number, string> = {
   1: "Single Family",
@@ -98,12 +99,13 @@ export default async function PropertiesPage({
       <ListFilters basePath="/properties" filters={filters} />
 
       {properties.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 mb-4">No properties found. Try adjusting your filters or add a new property.</p>
-          <Button asChild>
-            <Link href="/properties/new">Add Property</Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon="property"
+          title="No properties yet"
+          description="Add your first property to start managing your rental portfolio. You can track units, tenants, and finances all in one place."
+          href="/properties/new"
+          cta="Add Property"
+        />
       ) : (
         <>
           <div className="hidden md:block bg-white rounded-lg shadow">

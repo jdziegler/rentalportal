@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TenantFilters } from "@/components/tenant-filters";
 import { SetPageContext } from "@/components/set-page-context";
+import { EmptyState } from "@/components/empty-state";
 
 const statusLabels: Record<number, string> = {
   0: "Pending",
@@ -86,12 +87,13 @@ export default async function TenantsPage({
       <TenantFilters />
 
       {tenants.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 mb-4">No tenants found. Try adjusting your filters or add a new tenant.</p>
-          <Button asChild>
-            <Link href="/tenants/new">Add Tenant</Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon="tenant"
+          title="No tenants yet"
+          description="Add your tenants to keep track of contact info, lease history, and payment records. You can also invite them to pay rent online."
+          href="/tenants/new"
+          cta="Add Tenant"
+        />
       ) : (
         <>
           <div className="hidden md:block bg-white rounded-lg shadow">

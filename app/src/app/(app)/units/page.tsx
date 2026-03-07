@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
 import { ListFilters, type FilterConfig } from "@/components/list-filters";
 import { Pagination } from "@/components/pagination";
+import { EmptyState } from "@/components/empty-state";
 
 const unitTypes: Record<number, string> = {
   1: "Apartment",
@@ -117,12 +118,13 @@ export default async function UnitsPage({
       <ListFilters basePath="/units" filters={filters} />
 
       {units.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 mb-4">No units found. Try adjusting your filters or add a new unit.</p>
-          <Button asChild>
-            <Link href="/units/new">Add Unit</Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon="unit"
+          title="No units yet"
+          description="Units are the individual spaces within your properties — apartments, rooms, or offices. Add a unit to start tracking occupancy and rent."
+          href="/units/new"
+          cta="Add Unit"
+        />
       ) : (
         <>
           <div className="hidden md:block bg-white rounded-lg shadow">

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
 import { statusLabels } from "@/lib/transaction-status";
 import { IncomeChart } from "@/components/income-chart";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
 
 const chartRanges = [
   { value: "7d", label: "7 Days" },
@@ -140,6 +141,16 @@ export default async function DashboardPage({
   const lastExpenses = Number(lastMonthExpenses._sum.amount || 0);
   const occupancyRate = unitCount > 0 ? Math.round((occupiedCount / unitCount) * 100) : 0;
 
+  // Onboarding: show checklist until all setup steps are complete
+  const hasStripeConnect = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { stripeConnectOnboarded: true },
+  });
+  const allSetupDone = propertyCount > 0 && unitCount > 0 && tenantCount > 0 && leaseCount > 0 && hasStripeConnect?.stripeConnectOnboarded === true;
+  const onboardingSteps = !allSetupDone
+    ? buildOnboardingSteps(propertyCount, unitCount, leaseCount, tenantCount, hasStripeConnect?.stripeConnectOnboarded === true)
+    : null;
+
   // Chart data query
   const chartData = await buildChartData(userId, chartRange, now);
 
@@ -147,6 +158,10 @@ export default async function DashboardPage({
     <div>
       <SetPageContext label="/Dashboard" context={`Dashboard: ${propertyCount} properties, ${unitCount} units (${occupancyRate}% occupied), ${leaseCount} active leases, ${tenantCount} tenants. MTD income: $${income.toLocaleString()}, expenses: $${expenses.toLocaleString()}.`} />
       <h1 className="text-2xl font-bold mb-6 text-gray-900">Dashboard</h1>
+
+      {onboardingSteps && (
+        <OnboardingChecklist steps={onboardingSteps} />
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
@@ -492,4 +507,50 @@ async function buildChartData(
       expense: Math.round(val.expense * 100) / 100,
     };
   });
+}
+
+function buildOnboardingSteps(
+  propertyCount: number,
+  unitCount: number,
+  leaseCount: number,
+  tenantCount: number,
+  stripeConnected: boolean,
+) {
+  return [
+    {
+      title: "Add your first property",
+      description: "Start by adding a property with its address and details.",
+      href: "/properties/new",
+      completed: propertyCount > 0,
+      cta: "Add Property",
+    },
+    {
+      title: "Create a unit",
+      description: "Add units to your property (apartments, rooms, etc.).",
+      href: "/units/new",
+      completed: unitCount > 0,
+      cta: "Add Unit",
+    },
+    {
+      title: "Add a tenant",
+      description: "Add your tenants' contact information.",
+      href: "/tenants/new",
+      completed: tenantCount > 0,
+      cta: "Add Tenant",
+    },
+    {
+      title: "Create a lease",
+      description: "Link a tenant to a unit with rent terms and dates.",
+      href: "/leases/new",
+      completed: leaseCount > 0,
+      cta: "Create Lease",
+    },
+    {
+      title: "Set up rent collection",
+      description: "Connect your Stripe account to collect rent online.",
+      href: "/settings/payments",
+      completed: stripeConnected,
+      cta: "Connect Stripe",
+    },
+  ];
 }
