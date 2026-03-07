@@ -75,7 +75,7 @@ function VerifyForm() {
         return;
       }
 
-      router.push("/tenant/portal");
+      router.push("/tenant/dashboard");
     } catch {
       setError("Network error. Please try again.");
     } finally {

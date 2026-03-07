@@ -1,13 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function TenantLoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/tenant/session")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.authenticated) {
+          router.replace("/tenant/dashboard");
+        } else {
+          setChecking(false);
+        }
+      })
+      .catch(() => setChecking(false));
+  }, [router]);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm text-center">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -6,9 +6,9 @@ import { useState } from "react";
 import type { TenantSession } from "@/lib/tenant-auth";
 
 const NAV_ITEMS = [
-  { href: "/tenant/portal", label: "Pay Rent", icon: CreditCardIcon },
-  { href: "/tenant/portal/maintenance", label: "Maintenance", icon: WrenchIcon },
-  { href: "/tenant/portal/messages", label: "Messages", icon: ChatIcon },
+  { href: "/tenant/dashboard", label: "Pay Rent", icon: CreditCardIcon },
+  { href: "/tenant/maintenance", label: "Maintenance", icon: WrenchIcon },
+  { href: "/tenant/messages", label: "Messages", icon: ChatIcon },
 ];
 
 export default function TenantPortalShell({
@@ -32,7 +32,7 @@ export default function TenantPortalShell({
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/tenant/portal" className="text-lg font-bold text-gray-900">
+          <Link href="/tenant/dashboard" className="text-lg font-bold text-gray-900">
             PropertyPilot
           </Link>
           <div className="flex items-center gap-3">

@@ -58,7 +58,7 @@ export default function PayRentClient({
 
   useEffect(() => {
     if (paymentParam) {
-      window.history.replaceState({}, "", "/tenant/portal");
+      window.history.replaceState({}, "", "/tenant/dashboard");
     }
   }, [paymentParam]);
 

@@ -3,6 +3,7 @@ import { mkdirSync } from "fs";
 
 const BASE_URL = "http://localhost:3006";
 const EMAIL = process.argv[2] || "rent.ziegler@gmail.com";
+const TENANT_EMAIL = "jane.tenant@example.com";
 const BASE_DIR = process.argv[3] || "screenshots";
 
 // Record IDs — fetched from DB for rent.ziegler@gmail.com
@@ -25,6 +26,7 @@ const groups = [
       { name: "lease", path: `/leases/${IDS.lease}` },
       { name: "transaction", path: `/transactions/${IDS.transaction}` },
       { name: "listing", path: `/listings/${IDS.listing}` },
+      { name: "maintenance", path: "/maintenance" },
     ],
   },
   {
@@ -55,10 +57,18 @@ const groups = [
   },
   {
     dir: "tenant-portal",
+    auth: "tenant",
+    pages: [
+      { name: "tenant-dashboard", path: "/tenant" },
+      { name: "tenant-maintenance", path: "/tenant/maintenance" },
+      { name: "tenant-messages", path: "/tenant/messages" },
+    ],
+  },
+  {
+    dir: "tenant-portal",
     needsAuth: false,
     pages: [
       { name: "tenant-login", path: "/tenant" },
-      { name: "tenant-verify", path: "/tenant/verify" },
     ],
   },
   {
@@ -73,12 +83,12 @@ const groups = [
   },
 ];
 
-async function login(browser, viewport) {
+async function loginLandlord(browser, viewport) {
   const context = await browser.newContext({ viewport });
-  const loginPage = await context.newPage();
-  await loginPage.goto(`${BASE_URL}/login`, { waitUntil: "networkidle" });
+  const page = await context.newPage();
+  await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle" });
 
-  const result = await loginPage.evaluate(async (email) => {
+  const result = await page.evaluate(async (email) => {
     const res = await fetch("/api/auth/test-login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -87,12 +97,27 @@ async function login(browser, viewport) {
     return { ok: res.ok, status: res.status, body: await res.text() };
   }, EMAIL);
 
-  await loginPage.close();
+  await page.close();
+  if (!result.ok) throw new Error(`Landlord login failed: ${result.body}`);
+  return context;
+}
 
-  if (!result.ok) {
-    throw new Error(`Login failed: ${result.body}`);
-  }
+async function loginTenant(browser, viewport) {
+  const context = await browser.newContext({ viewport });
+  const page = await context.newPage();
+  await page.goto(`${BASE_URL}/tenant`, { waitUntil: "networkidle" });
 
+  const result = await page.evaluate(async (identifier) => {
+    const res = await fetch("/api/tenant/test-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier }),
+    });
+    return { ok: res.ok, status: res.status, body: await res.text() };
+  }, TENANT_EMAIL);
+
+  await page.close();
+  if (!result.ok) throw new Error(`Tenant login failed: ${result.body}`);
   return context;
 }
 
@@ -100,9 +125,12 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const defaultViewport = { width: 1280, height: 800 };
 
-  // Pre-create an authenticated context for the default viewport
-  const authContext = await login(browser, defaultViewport);
-  console.log(`Logged in as ${EMAIL}\n`);
+  // Pre-create authenticated contexts
+  const authContext = await loginLandlord(browser, defaultViewport);
+  console.log(`Logged in as landlord: ${EMAIL}`);
+
+  const tenantContext = await loginTenant(browser, defaultViewport);
+  console.log(`Logged in as tenant: ${TENANT_EMAIL}\n`);
 
   let totalOk = 0;
   let totalFail = 0;
@@ -112,15 +140,19 @@ async function main() {
     mkdirSync(outDir, { recursive: true });
     console.log(`--- ${group.dir}/ ---`);
 
-    // Determine context: use auth or anon, with correct viewport
     const viewport = group.viewport || defaultViewport;
     let ctx;
 
-    if (group.needsAuth === false) {
+    if (group.auth === "tenant") {
+      if (group.viewport) {
+        ctx = await loginTenant(browser, viewport);
+      } else {
+        ctx = tenantContext;
+      }
+    } else if (group.needsAuth === false) {
       ctx = await browser.newContext({ viewport });
     } else if (group.viewport) {
-      // Need a new auth context for different viewport
-      ctx = await login(browser, viewport);
+      ctx = await loginLandlord(browser, viewport);
     } else {
       ctx = authContext;
     }
@@ -133,8 +165,16 @@ async function main() {
           timeout: 30000,
         });
 
-        if (page.url().includes("/login") && group.needsAuth !== false) {
+        // Check for unexpected redirects
+        const url = page.url();
+        if (url.includes("/login") && group.needsAuth !== false && group.auth !== "tenant") {
           console.error(`  SKIP: ${pg.name} (redirected to login)`);
+          totalFail++;
+          await page.close();
+          continue;
+        }
+        if (url.endsWith("/tenant") && group.auth === "tenant") {
+          console.error(`  SKIP: ${pg.name} (redirected to tenant login)`);
           totalFail++;
           await page.close();
           continue;
@@ -155,8 +195,7 @@ async function main() {
       await page.close();
     }
 
-    // Clean up non-default contexts
-    if (ctx !== authContext) {
+    if (ctx !== authContext && ctx !== tenantContext) {
       await ctx.close();
     }
   }
