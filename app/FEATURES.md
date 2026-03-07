@@ -22,16 +22,16 @@ Upload lease PDFs and collect e-signatures from tenants.
 - [x] 2.5 Tenant portal documents tab — `/tenant/documents` page showing pending & completed signatures with "Review & Sign" links
 - [x] 2.6 Tests — 19 unit tests for document CRUD, signature lifecycle, file validation, access control (`src/lib/documents.test.ts`)
 
-## Feature 3: Tenant Screening Integration [PLANNED]
-Credit checks, background checks, eviction history via third-party provider.
+## Feature 3: Tenant Screening Integration [DONE]
+Credit checks, background checks, eviction history via adapter pattern (mock provider, swap for TransUnion/Checkr).
 
-- [ ] 3.1 Research & provider selection (TransUnion SmartMove, RentPrep, Checkr)
-- [ ] 3.2 Schema — ScreeningRequest and ScreeningReport models
-- [ ] 3.3 Screening API integration with adapter pattern
-- [ ] 3.4 Screening request UI on tenant detail page
-- [ ] 3.5 Tenant consent flow
-- [ ] 3.6 Application integration
-- [ ] 3.7 Tests
+- [x] 3.1 Provider architecture — adapter pattern with `ScreeningProvider` interface, `MockScreeningProvider` for dev/demo
+- [x] 3.2 Schema — `ScreeningRequest` (status lifecycle, consent token, expiry) and `ScreeningReport` (credit/criminal/eviction with scores and details)
+- [x] 3.3 Screening API — `/api/screening` (create/list), `/api/screening/[id]` (detail), `/api/screening/consent` (tenant consent endpoint)
+- [x] 3.4 Screening request UI — `TenantScreening` component on tenant detail page with credit score bar, report viewer, consent link copy
+- [x] 3.5 Tenant consent flow — `/screening/consent` page with FCRA disclosure, 7-day expiry, auto-runs screening on consent
+- [x] 3.6 Screening service — `src/lib/screening.ts` with `createScreeningRequest()`, `processConsent()`, `getProvider()` functions
+- [x] 3.7 Tests — 20 unit tests for mock provider, scoring, report types, provider registry (`src/lib/screening.test.ts`)
 
 ## Feature 4: Accounting Export (CSV & QuickBooks) [DONE]
 Export financial data for accountants.

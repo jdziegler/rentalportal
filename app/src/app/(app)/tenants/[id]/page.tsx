@@ -9,6 +9,7 @@ import { DeleteTenantButton } from "./delete-button";
 import { SetPageContext } from "@/components/set-page-context";
 import MessagesSection from "./messages-section";
 import { PortalLinkButton, PaymentLinkButton } from "./portal-link-button";
+import TenantScreening from "@/components/tenant-screening";
 
 const statusLabels: Record<number, string> = {
   0: "Pending",
@@ -305,6 +306,9 @@ export default async function TenantDetailPage({
           </table>
         </div>
       )}
+
+      {/* Tenant Screening */}
+      <TenantScreening contactId={id} />
 
       {/* Messages */}
       <MessagesSection contactId={id} initialMessages={serializedMessages} />

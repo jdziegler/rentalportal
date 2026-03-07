@@ -36,6 +36,7 @@ model User {
   maintenanceRequests MaintenanceRequest[]
   rentScheduleConfig  RentScheduleConfig?
   messages     Message[]
+  screeningRequests ScreeningRequest[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -156,6 +157,7 @@ model Contact {
   autoPayConfigs AutoPayConfig[]
   messages       Message[]
   signatures     Signature[]
+  screeningRequests ScreeningRequest[]
 }
 
 model Lease {
@@ -393,6 +395,44 @@ model Signature {
 
   @@unique([documentId, contactId])
   @@index([signingToken])
+}
+
+// ── Tenant Screening ──
+
+model ScreeningRequest {
+  id          String   @id @default(cuid())
+  userId      String   // landlord
+  contactId   String   // tenant being screened
+  provider    String   @default("mock") // mock, transunion, checkr
+  status      String   @default("pending") // pending, consent_sent, processing, completed, failed, expired
+  consentToken String  @unique @default(uuid())
+  consentedAt  DateTime?
+  completedAt  DateTime?
+  expiresAt    DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  reports ScreeningReport[]
+
+  @@index([userId, contactId])
+}
+
+model ScreeningReport {
+  id          String   @id @default(cuid())
+  requestId   String
+  type        String   // credit, criminal, eviction
+  status      String   @default("clear") // clear, review, alert
+  score       Int?     // credit score (300-850)
+  summary     String?  // human-readable summary
+  details     Json?    // full report data
+  createdAt   DateTime @default(now())
+
+  request ScreeningRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
 }
 
 model CronJobLog {
