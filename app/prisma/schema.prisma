@@ -361,3 +361,33 @@ model CronJobLog {
   startedAt   DateTime  @default(now())
   completedAt DateTime?
 }
+
+// ── Notifications ──
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  contactId String
+  channel   String   // "email" or "sms"
+  type      String   // rent_reminder, rent_overdue, payment_received, etc.
+  status    String   // "sent", "failed", "bounced"
+  error     String?
+  recipient String   // email address or phone number
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([contactId, type])
+}
+
+model NotificationPreference {
+  id           String   @id @default(cuid())
+  userId       String   // landlord who owns the contact
+  contactId    String   // tenant
+  emailEnabled Boolean  @default(true)
+  smsEnabled   Boolean  @default(false)
+  disabledTypes Json    @default("[]") // array of NotificationType strings to suppress
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, contactId], name: "userId_contactId")
+}

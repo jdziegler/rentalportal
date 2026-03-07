@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { sendNotification } from "@/lib/notifications";
 
 async function getUserId() {
   const session = await auth();
@@ -65,8 +66,26 @@ export async function updateMaintenanceRequest(
   redirect(`/maintenance/${id}?toast=Request+updated`);
 }
 
+const MAINT_STATUS_LABELS: Record<number, string> = {
+  0: "Open",
+  1: "In Progress",
+  2: "Completed",
+  3: "Cancelled",
+};
+
 export async function updateMaintenanceStatus(id: string, status: number) {
   const userId = await getUserId();
+
+  const request = await prisma.maintenanceRequest.findUnique({
+    where: { id, userId },
+    include: {
+      contact: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+      unit: { select: { name: true, property: { select: { name: true } } } },
+    },
+  });
+  if (!request) throw new Error("Request not found");
+
+  const oldStatus = request.status;
 
   await prisma.maintenanceRequest.update({
     where: { id, userId },
@@ -75,6 +94,25 @@ export async function updateMaintenanceStatus(id: string, status: number) {
       completedAt: status === 2 ? new Date() : null,
     },
   });
+
+  // Send notification to tenant if status changed and contact exists
+  if (oldStatus !== status && request.contact) {
+    sendNotification({
+      userId,
+      contactId: request.contact.id,
+      type: "maintenance_update",
+      data: {
+        tenantName: `${request.contact.firstName} ${request.contact.lastName}`,
+        propertyName: request.unit?.property?.name || "Property",
+        unitName: request.unit?.name || "Unit",
+        requestTitle: request.title,
+        oldStatus: MAINT_STATUS_LABELS[oldStatus] || "Unknown",
+        newStatus: MAINT_STATUS_LABELS[status] || "Unknown",
+      },
+      email: request.contact.email,
+      phone: request.contact.phone,
+    }).catch((err) => console.error("Maintenance notification failed:", err));
+  }
 
   revalidatePath(`/maintenance/${id}`);
   revalidatePath("/maintenance");

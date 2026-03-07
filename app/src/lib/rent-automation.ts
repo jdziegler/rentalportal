@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { stripe, CONNECT_FEES } from "@/lib/stripe";
+import { sendNotification } from "@/lib/notifications";
 
 // ── Helpers ──
 
@@ -358,6 +359,7 @@ export async function assessLateFees(): Promise<LateFeeResult> {
       balance: { gt: 0 },
     },
     include: {
+      contact: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
       lease: {
         select: {
           id: true,
@@ -488,6 +490,23 @@ export async function assessLateFees(): Promise<LateFeeResult> {
         },
       });
       created++;
+
+      // Notify tenant of late fee (fire-and-forget)
+      if (txn.contact) {
+        sendNotification({
+          userId: lease.userId,
+          contactId: txn.contact.id,
+          type: "late_fee_charged",
+          data: {
+            tenantName: `${txn.contact.firstName} ${txn.contact.lastName}`,
+            propertyName,
+            unitName,
+            lateFeeAmount: feeAmount,
+          },
+          email: txn.contact.email,
+          phone: txn.contact.phone,
+        }).catch((err) => console.error("Late fee notification failed:", err));
+      }
     } catch (err) {
       errors.push(
         `Transaction ${txn.id}: ${err instanceof Error ? err.message : String(err)}`

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendNotification } from "@/lib/notifications";
 
 // GET /api/messages?contactId=xxx — list messages for a contact
 export async function GET(req: NextRequest) {
@@ -71,6 +72,20 @@ export async function POST(req: NextRequest) {
       sender: "landlord",
     },
   });
+
+  // Notify tenant of new message (fire-and-forget)
+  sendNotification({
+    userId: session.user.id,
+    contactId,
+    type: "new_message",
+    data: {
+      tenantName: `${contact.firstName} ${contact.lastName}`,
+      senderName: session.user.name || "Your landlord",
+      messagePreview: body.trim().slice(0, 100),
+    },
+    email: contact.email,
+    phone: contact.phone,
+  }).catch((err) => console.error("Message notification failed:", err));
 
   return NextResponse.json(message, { status: 201 });
 }

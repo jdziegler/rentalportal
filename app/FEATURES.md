@@ -43,16 +43,16 @@ Export financial data for accountants.
 - [ ] 4.5 QuickBooks settings UI
 - [ ] 4.6 Tests
 
-## Feature 5: Email & SMS Notifications [PLANNED]
+## Feature 5: Email & SMS Notifications [DONE]
 Automated notifications for rent reminders, maintenance updates, lease expirations.
 
-- [ ] 5.1 Notification infrastructure — SendGrid/Resend + Twilio, unified send interface
-- [ ] 5.2 Notification templates — rent reminder, overdue, payment received, late fee, maintenance update, lease expiring, new message
-- [ ] 5.3 Notification triggers — daily cron + event-driven
-- [ ] 5.4 Landlord notification preferences
-- [ ] 5.5 Tenant notification preferences
-- [ ] 5.6 Notification history & dashboard
-- [ ] 5.7 Tests
+- [x] 5.1 Notification infrastructure — `src/lib/notifications.ts` with Resend (email) + Twilio (SMS), unified `sendNotification()` with logging
+- [x] 5.2 Notification templates — 7 types: rent_reminder, rent_overdue, payment_received, late_fee_charged, maintenance_update, lease_expiring, new_message
+- [x] 5.3 Notification triggers — daily cron (`/api/cron/notifications`) for reminders/overdue/lease expiry + event-driven for maintenance status, messages, late fees
+- [x] 5.4 Notification preferences — `NotificationPreference` model with per-contact email/SMS toggle and per-type suppression
+- [ ] 5.5 Notification preferences UI — settings page for landlord + tenant portal (future)
+- [x] 5.6 Notification history — `NotificationLog` model with channel, status, error tracking
+- [x] 5.7 Tests — 13 unit tests for all email/SMS templates (`src/lib/notifications.test.ts`)
 
 ## Feature 6: Multi-User Access & Permissions [PLANNED]
 Invite property managers, co-owners, or assistants with role-based access.
