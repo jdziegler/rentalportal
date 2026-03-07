@@ -102,7 +102,7 @@ export default async function UnitDetailPage({
             <div className="flex justify-between">
               <dt className="text-gray-600">Type</dt>
               <dd className="text-gray-900 font-medium">
-                {unitTypes[unit.type] || "Unknown"}
+                {unitTypes[unit.type] || "—"}
               </dd>
             </div>
             <div className="flex justify-between">

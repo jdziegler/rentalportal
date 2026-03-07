@@ -37,6 +37,9 @@ export default async function EditListingPage({
 
   if (!listing) notFound();
 
+  // Strip HTML tags from legacy TenantCloud descriptions
+  const plainDescription = (listing.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
   const updateWithId = updateListing.bind(null, id);
 
   const formUnits = units.map((u) => ({
@@ -65,7 +68,7 @@ export default async function EditListingPage({
           action={updateWithId}
           defaultValues={{
             unitId: listing.unitId,
-            description: listing.description || "",
+            description: plainDescription,
             price: Number(listing.price),
             isActive: listing.isActive,
           }}

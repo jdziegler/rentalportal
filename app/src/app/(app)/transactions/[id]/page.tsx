@@ -60,7 +60,7 @@ export default async function TransactionDetailPage({
               Transactions
             </Link>
             <span>/</span>
-            <span className="text-gray-900">#{id.slice(0, 8)}</span>
+            <span className="text-gray-900">{transaction.details || `#${id.slice(0, 8)}`}</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
             {transaction.details || `Transaction #${id.slice(0, 8)}`}

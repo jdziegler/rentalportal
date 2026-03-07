@@ -57,7 +57,7 @@ export default async function LeaseDetailPage({
   const propertyName = lease.unit.property.name;
   const unitName = lease.unit.name;
   const tenantName = `${lease.contact.firstName} ${lease.contact.lastName}`;
-  const leaseName = lease.name || `${propertyName} - ${unitName}`;
+  const leaseName = `${propertyName} - ${unitName}${lease.name ? ` (${lease.name})` : ""}`;
 
   // Balance summary for this lease
   const balanceAgg = await prisma.transaction.aggregate({
@@ -138,24 +138,24 @@ export default async function LeaseDetailPage({
 
       {/* Balance Summary */}
       {totalCharged > 0 && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+            <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
               ${totalCharged.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-sm text-gray-600">Total Charged</p>
+            <p className="text-xs sm:text-sm text-gray-600">Total Charged</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+            <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">
               ${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-sm text-gray-600">Total Paid</p>
+            <p className="text-xs sm:text-sm text-gray-600">Total Paid</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <p className={`text-2xl font-bold ${totalBalance > 0 ? "text-red-600" : "text-gray-900"}`}>
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+            <p className={`text-lg sm:text-2xl font-bold truncate ${totalBalance > 0 ? "text-red-600" : "text-gray-900"}`}>
               ${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-sm text-gray-600">Balance Owed</p>
+            <p className="text-xs sm:text-sm text-gray-600">Balance Owed</p>
           </div>
         </div>
       )}

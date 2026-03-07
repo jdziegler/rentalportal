@@ -89,7 +89,7 @@ export default async function IncomeExpenseReportPage({
 
   for (const t of transactions) {
     const amount = Number(t.amount);
-    const subcat = t.subcategory || (t.category === "income" ? "other_income" : "other_expense");
+    const subcat = t.subcategory || (t.category === "income" ? "rent" : "other_expense");
 
     if (t.category === "income") {
       totalIncome += amount;

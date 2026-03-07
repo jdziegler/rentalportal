@@ -26,12 +26,13 @@ const statusColors: Record<number, string> = {
 export default async function TenantStatementPage({
   searchParams,
 }: {
-  searchParams: Promise<{ contactId?: string }>;
+  searchParams: Promise<{ contactId?: string; tenantId?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const { contactId } = await searchParams;
+  const params = await searchParams;
+  const contactId = params.contactId || params.tenantId;
 
   // Fetch all tenants for the selector
   const tenants = await prisma.contact.findMany({
