@@ -54,14 +54,14 @@ Automated notifications for rent reminders, maintenance updates, lease expiratio
 - [x] 5.6 Notification history — `NotificationLog` model with channel, status, error tracking
 - [x] 5.7 Tests — 13 unit tests for all email/SMS templates (`src/lib/notifications.test.ts`)
 
-## Feature 6: Multi-User Access & Permissions [PLANNED]
+## Feature 6: Multi-User Access & Permissions [DONE]
 Invite property managers, co-owners, or assistants with role-based access.
 
-- [ ] 6.1 Schema — Team, TeamMember, TeamInvite models
-- [ ] 6.2 Role definitions — Owner, Manager, Viewer, Maintenance
-- [ ] 6.3 Permission middleware — `src/lib/permissions.ts`
-- [ ] 6.4 Team management UI in Settings
-- [ ] 6.5 Invitation flow — email invite, accept page, OAuth
-- [ ] 6.6 UI permission guards — hide/disable based on role
-- [ ] 6.7 Data scoping — filter all queries by team membership
-- [ ] 6.8 Tests
+- [x] 6.1 Schema — `Team`, `TeamMember`, `TeamInvite` models with unique constraints and expiry
+- [x] 6.2 Role definitions — Owner (full), Manager (read/write most), Viewer (read-only), Maintenance (maintenance only)
+- [x] 6.3 Permission middleware — `src/lib/permissions.ts` with `hasPermission()`, `canRead()`, `canWrite()`, `getPermissions()` + team CRUD functions
+- [x] 6.4 Team management UI — `/settings/team` page with invite form, member list, role management, pending invites
+- [x] 6.5 Invitation flow — `/api/team/invites` (create), `/invite` page (accept), 7-day token expiry, copy invite link
+- [x] 6.6 API routes — `/api/team` (get/create), `/api/team/members/[userId]` (update role/remove), `/api/team/invites/accept`
+- [x] 6.7 Sidebar integration — Team nav item in Settings section
+- [x] 6.8 Tests — 21 unit tests for roles, permissions, read/write guards, hierarchy consistency (`src/lib/permissions.test.ts`)

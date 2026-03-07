@@ -37,6 +37,8 @@ model User {
   rentScheduleConfig  RentScheduleConfig?
   messages     Message[]
   screeningRequests ScreeningRequest[]
+  ownedTeams   Team[]       @relation("TeamOwner")
+  teamMemberships TeamMember[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -395,6 +397,51 @@ model Signature {
 
   @@unique([documentId, contactId])
   @@index([signingToken])
+}
+
+// ── Teams & Permissions ──
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String   // User who created the team
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members TeamMember[]
+  invites TeamInvite[]
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  userId String
+  role   String @default("viewer") // owner, manager, viewer, maintenance
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model TeamInvite {
+  id        String    @id @default(cuid())
+  teamId    String
+  email     String
+  role      String    @default("viewer")
+  token     String    @unique @default(uuid())
+  status    String    @default("pending") // pending, accepted, expired
+  expiresAt DateTime
+  acceptedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token])
 }
 
 // ── Tenant Screening ──
