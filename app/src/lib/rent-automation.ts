@@ -305,7 +305,7 @@ export async function processAutoPayments(): Promise<AutoPayResult> {
           stripePaymentIntentId: paymentIntent.id,
           stripePaymentStatus: paymentIntent.status,
           paymentMethod: payMethod,
-          status: isPaid ? 2 : isProcessing ? 3 : 0,
+          status: isPaid ? 1 : isProcessing ? 3 : 0,
           paid: isPaid ? txn.amount : 0,
           balance: isPaid ? 0 : txn.amount,
           paidAt: isPaid ? new Date() : null,
@@ -355,7 +355,7 @@ export async function assessLateFees(): Promise<LateFeeResult> {
   const overdueTransactions = await prisma.transaction.findMany({
     where: {
       source: "auto_rent",
-      status: { in: [0, 1] }, // UNPAID or PARTIAL
+      status: { in: [0, 2] }, // UNPAID or PARTIAL
       balance: { gt: 0 },
     },
     include: {

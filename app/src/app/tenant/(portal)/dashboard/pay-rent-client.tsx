@@ -28,10 +28,11 @@ interface TransactionInfo {
 
 const STATUS_LABELS: Record<number, { label: string; color: string }> = {
   0: { label: "Unpaid", color: "bg-red-100 text-red-700" },
-  1: { label: "Partial", color: "bg-yellow-100 text-yellow-700" },
-  2: { label: "Paid", color: "bg-green-100 text-green-700" },
-  3: { label: "Voided", color: "bg-gray-100 text-gray-500" },
-  4: { label: "Waived", color: "bg-blue-100 text-blue-700" },
+  1: { label: "Paid", color: "bg-green-100 text-green-700" },
+  2: { label: "Partial", color: "bg-yellow-100 text-yellow-700" },
+  3: { label: "Pending", color: "bg-blue-100 text-blue-700" },
+  4: { label: "Waived", color: "bg-gray-100 text-gray-700" },
+  9: { label: "Voided", color: "bg-gray-100 text-gray-500" },
 };
 
 export default function PayRentClient({
@@ -64,7 +65,7 @@ export default function PayRentClient({
 
   const currentLease = leases.find((l) => l.id === selectedLease);
   const leaseTransactions = transactions.filter((t) => t.leaseId === selectedLease);
-  const unpaidTransactions = leaseTransactions.filter((t) => t.status === 0 || t.status === 1);
+  const unpaidTransactions = leaseTransactions.filter((t) => t.status === 0 || t.status === 2);
   const totalOwed = unpaidTransactions.reduce((sum, t) => sum + t.balance, 0);
 
   function startPay(transactionId: string, amount: number) {
@@ -298,7 +299,7 @@ export default function PayRentClient({
                     <span className="text-sm font-medium text-gray-900">
                       ${t.amount.toFixed(2)}
                     </span>
-                    {(t.status === 0 || t.status === 1) && t.balance > 0 && (
+                    {(t.status === 0 || t.status === 2) && t.balance > 0 && (
                       <button
                         onClick={() => startPay(t.id, t.balance)}
                         disabled={payingId !== null}

@@ -113,7 +113,7 @@ export default async function DashboardPage({
       where: {
         userId,
         category: "income",
-        status: { in: [0, 1] }, // UNPAID or PARTIAL
+        status: { in: [0, 2] }, // UNPAID or PARTIAL
         balance: { gt: 0 },
         date: { lt: now },
       },

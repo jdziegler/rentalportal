@@ -127,14 +127,14 @@ export default async function TransactionsPage({
 
   // Outstanding: balance on unpaid/partial income transactions
   const outstandingPromise = prisma.transaction.aggregate({
-    where: { ...where, category: "income", status: { in: [0, 1] } },
+    where: { ...where, category: "income", status: { in: [TRANSACTION_STATUS.UNPAID, TRANSACTION_STATUS.PARTIAL] } },
     _sum: { balance: true },
   });
 
   // Overdue: unpaid/partial income transactions past due date + grace period
   // Must be computed per-transaction since grace period varies by lease
   const overdueTransactionsPromise = prisma.transaction.findMany({
-    where: { ...where, category: "income", status: { in: [0, 1] } },
+    where: { ...where, category: "income", status: { in: [TRANSACTION_STATUS.UNPAID, TRANSACTION_STATUS.PARTIAL] } },
     select: { balance: true, date: true, lease: { select: { gracePeriod: true } } },
   });
 

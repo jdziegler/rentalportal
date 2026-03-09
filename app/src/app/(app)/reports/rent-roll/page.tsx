@@ -37,7 +37,7 @@ export default async function RentRollPage() {
       leaseId: { in: leaseIds },
       userId: session.user.id,
       category: "income",
-      status: { in: [0, 1] },
+      status: { in: [0, 2] },
     },
     _sum: { balance: true },
   });

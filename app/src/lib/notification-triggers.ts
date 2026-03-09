@@ -37,7 +37,7 @@ export async function runNotificationCron(): Promise<NotificationCronResult> {
     const upcomingCharges = await prisma.transaction.findMany({
       where: {
         source: "auto_rent",
-        status: { in: [0, 1] }, // unpaid or partial
+        status: { in: [0, 2] }, // unpaid or partial
         balance: { gt: 0 },
         date: {
           gte: new Date(reminderDate.getFullYear(), reminderDate.getMonth(), reminderDate.getDate()),
@@ -101,7 +101,7 @@ export async function runNotificationCron(): Promise<NotificationCronResult> {
     const overdueCharges = await prisma.transaction.findMany({
       where: {
         source: "auto_rent",
-        status: { in: [0, 1] },
+        status: { in: [0, 2] },
         balance: { gt: 0 },
         date: {
           gte: new Date(overdueDate.getFullYear(), overdueDate.getMonth(), overdueDate.getDate()),
