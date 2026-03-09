@@ -164,9 +164,22 @@ export default async function TransactionsPage({
       <SetPageContext label="/Transactions" context={`Transactions list: ${transactions.length} shown (page ${page}). Paid: $${totalPaid.toLocaleString()}, Outstanding: $${totalOutstanding.toLocaleString()}, Overdue: $${totalOverdue.toLocaleString()}. User can see date, details, property, tenant, status, amount, and balance.`} />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
-        <Button asChild>
-          <Link href="/transactions/new">Add Transaction</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <a
+              href={`/api/export/transactions?${new URLSearchParams(
+                Object.fromEntries(
+                  Object.entries(params).filter(([, v]) => v != null) as [string, string][]
+                )
+              ).toString()}`}
+            >
+              Export CSV
+            </a>
+          </Button>
+          <Button asChild>
+            <Link href="/transactions/new">Add Transaction</Link>
+          </Button>
+        </div>
       </div>
 
       {/* Totals Summary */}

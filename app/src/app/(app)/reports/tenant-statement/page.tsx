@@ -104,7 +104,17 @@ export default async function TenantStatementPage({
         <span>/</span>
         <span className="text-gray-900">Tenant Statement</span>
       </div>
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Tenant Statement</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Tenant Statement</h1>
+        {contactId && tenant && (
+          <a
+            href={`/api/export/tenant-ledger?contactId=${contactId}`}
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition"
+          >
+            Export CSV
+          </a>
+        )}
+      </div>
 
       {/* Tenant Selector */}
       <form className="mb-6 flex items-end gap-3">
