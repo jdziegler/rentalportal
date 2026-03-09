@@ -51,7 +51,12 @@ export default async function TransactionsPage({
   if (params.contactId) {
     where.contactId = params.contactId;
   }
-  if (params.status && params.status !== "all") {
+  let overdueFilter = false;
+  if (params.status === "overdue") {
+    overdueFilter = true;
+    where.status = { in: [TRANSACTION_STATUS.UNPAID, TRANSACTION_STATUS.PARTIAL] };
+    where.balance = { gt: 0 };
+  } else if (params.status && params.status !== "all") {
     where.status = parseInt(params.status, 10);
   }
 
@@ -93,6 +98,24 @@ export default async function TransactionsPage({
   } else {
     // Default: this month
     where.date = { gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+  }
+
+  // Overdue filter: find IDs of transactions past due + grace period
+  if (overdueFilter) {
+    const candidates = await prisma.transaction.findMany({
+      where,
+      select: { id: true, date: true, lease: { select: { gracePeriod: true } } },
+    });
+    const today = new Date();
+    const overdueIds = candidates
+      .filter((t) => {
+        const grace = t.lease?.gracePeriod ?? 5;
+        const due = new Date(t.date);
+        due.setDate(due.getDate() + grace);
+        return due < today;
+      })
+      .map((t) => t.id);
+    where.id = { in: overdueIds };
   }
 
   // Load properties for the filter dropdown

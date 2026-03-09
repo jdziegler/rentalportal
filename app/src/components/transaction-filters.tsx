@@ -94,6 +94,7 @@ export function TransactionFilters({ properties }: TransactionFiltersProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="overdue">Overdue</SelectItem>
               {Object.entries(statusLabels).map(([value, label]) => (
                 <SelectItem key={value} value={value}>
                   {label}
