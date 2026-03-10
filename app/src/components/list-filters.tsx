@@ -29,9 +29,10 @@ export interface FilterConfig {
 interface ListFiltersProps {
   basePath: string;
   filters: FilterConfig[];
+  bare?: boolean;
 }
 
-export function ListFilters({ basePath, filters }: ListFiltersProps) {
+export function ListFilters({ basePath, filters, bare }: ListFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -86,8 +87,7 @@ export function ListFilters({ basePath, filters }: ListFiltersProps) {
     return value !== "all";
   });
 
-  return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
+  const inner = (
       <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-end gap-3 md:gap-4">
         {filters.map((filter) => {
           if (filter.type === "search") {
@@ -141,6 +141,13 @@ export function ListFilters({ basePath, filters }: ListFiltersProps) {
           </div>
         )}
       </div>
+  );
+
+  if (bare) return inner;
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4 mb-6">
+      {inner}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export function TenantFilters() {
+export function TenantFilters({ bare }: { bare?: boolean } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -36,8 +36,7 @@ export function TenantFilters() {
 
   const hasFilters = status !== "ACTIVE" || search !== "";
 
-  return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
+  const inner = (
       <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-end gap-3 md:gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Status</label>
@@ -86,6 +85,13 @@ export function TenantFilters() {
           </div>
         )}
       </div>
+  );
+
+  if (bare) return inner;
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4 mb-6">
+      {inner}
     </div>
   );
 }
