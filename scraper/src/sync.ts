@@ -29,45 +29,45 @@ if (fs.existsSync(envPath)) {
 
 import { TenantCloudAuth } from './auth';
 import { TenantCloudAPI } from './api';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, PropertyType, UnitType, ContactStatus, LeaseType, LeaseStatus, TransactionStatus, RentPeriod } from '@prisma/client';
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const prisma = new PrismaClient();
 
 // ── TC integer → Prisma enum mappers ──
 
-function mapLeaseStatus(n: number): string {
-  const m: Record<number, string> = { 0: "ACTIVE", 1: "EXPIRED", 2: "TERMINATED" };
+function mapLeaseStatus(n: number): LeaseStatus {
+  const m: Record<number, LeaseStatus> = { 0: "ACTIVE", 1: "EXPIRED", 2: "TERMINATED" };
   return m[n] ?? "ACTIVE";
 }
 
-function mapLeaseType(n: number): string {
-  const m: Record<number, string> = { 1: "FIXED", 2: "MONTH_TO_MONTH" };
+function mapLeaseType(n: number): LeaseType {
+  const m: Record<number, LeaseType> = { 1: "FIXED", 2: "MONTH_TO_MONTH" };
   return m[n] ?? "FIXED";
 }
 
-function mapTransactionStatus(n: number): string {
-  const m: Record<number, string> = { 0: "UNPAID", 1: "PAID", 2: "PARTIAL", 3: "PENDING", 4: "WAIVED", 9: "VOIDED" };
+function mapTransactionStatus(n: number): TransactionStatus {
+  const m: Record<number, TransactionStatus> = { 0: "UNPAID", 1: "PAID", 2: "PARTIAL", 3: "PENDING", 4: "WAIVED", 9: "VOIDED" };
   return m[n] ?? "UNPAID";
 }
 
-function mapContactStatus(n: number): string {
-  const m: Record<number, string> = { 0: "PENDING", 1: "INVITED", 2: "ACTIVE", 3: "INACTIVE" };
+function mapContactStatus(n: number): ContactStatus {
+  const m: Record<number, ContactStatus> = { 0: "PENDING", 1: "INVITED", 2: "ACTIVE", 3: "INACTIVE" };
   return m[n] ?? "PENDING";
 }
 
-function mapPropertyType(n: number): string {
-  const m: Record<number, string> = { 1: "SINGLE_FAMILY", 2: "MULTI_FAMILY", 3: "COMMERCIAL" };
+function mapPropertyType(n: number): PropertyType {
+  const m: Record<number, PropertyType> = { 1: "SINGLE_FAMILY", 2: "MULTI_FAMILY", 3: "COMMERCIAL" };
   return m[n] ?? "MULTI_FAMILY";
 }
 
-function mapUnitType(n: number): string {
-  const m: Record<number, string> = { 1: "APARTMENT", 2: "HOUSE", 3: "ROOM" };
+function mapUnitType(n: number): UnitType {
+  const m: Record<number, UnitType> = { 1: "APARTMENT", 2: "HOUSE", 3: "ROOM" };
   return m[n] ?? "APARTMENT";
 }
 
-function mapRentPeriod(n: number): string {
-  const m: Record<number, string> = { 1: "WEEKLY", 2: "BIWEEKLY", 5: "MONTHLY", 6: "QUARTERLY", 7: "YEARLY" };
+function mapRentPeriod(n: number): RentPeriod {
+  const m: Record<number, RentPeriod> = { 1: "WEEKLY", 2: "BIWEEKLY", 5: "MONTHLY", 6: "QUARTERLY", 7: "YEARLY" };
   return m[n] ?? "MONTHLY";
 }
 
