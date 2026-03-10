@@ -278,13 +278,23 @@ export default async function TransactionsPage({
                         </div>
                       </td>
                       <td className="px-6 py-4 text-gray-700">
-                        {t.property?.name || "\u2014"}
+                        {t.propertyId && t.property ? (
+                          <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
+                            {t.property.name}
+                          </Link>
+                        ) : (
+                          "\u2014"
+                        )}
                         {t.unit ? ` \u2014 ${t.unit.name}` : ""}
                       </td>
                       <td className="px-6 py-4 text-gray-700">
-                        {t.contact
-                          ? `${t.contact.firstName} ${t.contact.lastName}`
-                          : "\u2014"}
+                        {t.contactId && t.contact ? (
+                          <Link href={`/tenants/${t.contactId}`} className="text-blue-600 hover:underline">
+                            {t.contact.firstName} {t.contact.lastName}
+                          </Link>
+                        ) : (
+                          "\u2014"
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <Badge
@@ -317,15 +327,17 @@ export default async function TransactionsPage({
             {transactions.map((t) => {
               const isIncome = t.category === "income";
               return (
-                <Link
+                <div
                   key={t.id}
-                  href={`/transactions/${t.id}`}
-                  className="block bg-white rounded-lg shadow p-4 active:bg-gray-50"
+                  className="block bg-white rounded-lg shadow p-4"
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="font-medium text-gray-900 truncate">
+                    <Link
+                      href={`/transactions/${t.id}`}
+                      className="font-medium text-blue-600 hover:underline truncate"
+                    >
                       {t.details || `Transaction #${t.id.slice(0, 8)}`}
-                    </div>
+                    </Link>
                     <span
                       className={`text-sm font-semibold whitespace-nowrap ${
                         isIncome ? "text-green-600" : "text-red-600"
@@ -360,12 +372,29 @@ export default async function TransactionsPage({
                   </div>
                   {(t.property?.name || t.contact) && (
                     <div className="text-xs text-gray-500 mt-1 truncate">
-                      {t.property?.name || ""}
+                      {t.propertyId && t.property ? (
+                        <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
+                          {t.property.name}
+                        </Link>
+                      ) : (
+                        t.property?.name || ""
+                      )}
                       {t.unit ? ` \u2014 ${t.unit.name}` : ""}
-                      {t.contact ? ` \u2022 ${t.contact.firstName} ${t.contact.lastName}` : ""}
+                      {t.contact && (
+                        <>
+                          {t.property?.name ? " \u2022 " : ""}
+                          {t.contactId ? (
+                            <Link href={`/tenants/${t.contactId}`} className="text-blue-600 hover:underline">
+                              {t.contact.firstName} {t.contact.lastName}
+                            </Link>
+                          ) : (
+                            `${t.contact.firstName} ${t.contact.lastName}`
+                          )}
+                        </>
+                      )}
                     </div>
                   )}
-                </Link>
+                </div>
               );
             })}
           </div>
