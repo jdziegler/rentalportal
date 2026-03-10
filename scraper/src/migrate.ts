@@ -29,8 +29,8 @@ const prisma = new PrismaClient();
 // ── TC integer → Prisma enum mappers ──
 
 function mapLeaseStatus(n: number): LeaseStatus {
-  const m: Record<number, LeaseStatus> = { 0: "ACTIVE", 1: "EXPIRED", 2: "TERMINATED" };
-  return m[n] ?? "ACTIVE";
+  const m: Record<number, LeaseStatus> = { 0: "ACTIVE", 1: "EXPIRED", 2: "TERMINATED", 4: "EXPIRED" };
+  return m[n] ?? "EXPIRED";
 }
 
 function mapLeaseType(n: number): LeaseType {
