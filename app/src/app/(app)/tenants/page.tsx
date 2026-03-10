@@ -160,7 +160,7 @@ export default async function TenantsPage({
                       <td className="px-6 py-4">
                         <Link
                           href={`/tenants/${t.id}`}
-                          className="text-blue-600 hover:underline font-medium"
+                          className="text-gray-900 font-medium hover:text-indigo-600"
                         >
                           {t.firstName} {t.lastName}
                         </Link>
@@ -187,7 +187,7 @@ export default async function TenantsPage({
                                 {i > 0 && ", "}
                                 <Link
                                   href={l.unit?.id ? `/units/${l.unit.id}` : `/leases/${l.id}`}
-                                  className="text-blue-600 hover:underline text-xs"
+                                  className="text-indigo-600 hover:underline text-xs"
                                 >
                                   {l.unit?.property?.name || "?"} — {l.unit?.name || "?"}
                                 </Link>

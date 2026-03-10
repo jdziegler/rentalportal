@@ -129,7 +129,7 @@ export default async function PropertiesPage({
                       <td className="px-6 py-4">
                         <Link
                           href={`/properties/${p.id}`}
-                          className="text-blue-600 hover:underline font-medium"
+                          className="text-gray-900 font-medium hover:text-indigo-600"
                         >
                           {p.name}
                         </Link>

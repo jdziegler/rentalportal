@@ -175,19 +175,19 @@ export default async function MaintenancePage({
                     <td className="px-6 py-4">
                       <Link
                         href={`/maintenance/${r.id}`}
-                        className="text-blue-600 hover:underline font-medium"
+                        className="text-gray-900 font-medium hover:text-indigo-600"
                       >
                         {r.title}
                       </Link>
                     </td>
                     <td className="px-6 py-4">
-                      <Link href={`/properties/${r.property.id}`} className="text-blue-600 hover:underline">
+                      <Link href={`/properties/${r.property.id}`} className="text-indigo-600 hover:underline">
                         {r.property.name}
                       </Link>
                       {r.unit && (
                         <>
                           {" — "}
-                          <Link href={`/units/${r.unit.id}`} className="text-blue-600 hover:underline">
+                          <Link href={`/units/${r.unit.id}`} className="text-indigo-600 hover:underline">
                             {r.unit.name}
                           </Link>
                         </>
@@ -205,7 +205,7 @@ export default async function MaintenancePage({
                     </td>
                     <td className="px-6 py-4">
                       {r.contact ? (
-                        <Link href={`/tenants/${r.contact.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/tenants/${r.contact.id}`} className="text-indigo-600 hover:underline">
                           {r.contact.firstName} {r.contact.lastName}
                         </Link>
                       ) : "—"}

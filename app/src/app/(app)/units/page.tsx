@@ -145,7 +145,7 @@ export default async function UnitsPage({
                     <td className="px-6 py-4">
                       <Link
                         href={`/units/${u.id}`}
-                        className="text-blue-600 hover:underline font-medium"
+                        className="text-gray-900 font-medium hover:text-indigo-600"
                       >
                         {u.name}
                       </Link>
@@ -153,7 +153,7 @@ export default async function UnitsPage({
                     <td className="px-6 py-4">
                       <Link
                         href={`/properties/${u.property.id}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-indigo-600 hover:underline"
                       >
                         {u.property.name}
                       </Link>

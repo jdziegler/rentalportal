@@ -150,13 +150,13 @@ export default async function LeasesPage({
                     <td className="px-6 py-4">
                       <Link
                         href={`/units/${l.unit.id}`}
-                        className="text-blue-600 hover:underline font-medium"
+                        className="text-gray-900 font-medium hover:text-indigo-600"
                       >
                         {l.unit.property.name} — {l.unit.name}
                       </Link>
                     </td>
                     <td className="px-6 py-4">
-                      <Link href={`/tenants/${l.contact.id}`} className="text-blue-600 hover:underline">
+                      <Link href={`/tenants/${l.contact.id}`} className="text-indigo-600 hover:underline">
                         {l.contact.firstName} {l.contact.lastName}
                       </Link>
                     </td>

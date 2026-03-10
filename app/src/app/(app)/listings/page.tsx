@@ -98,7 +98,7 @@ export default async function ListingsPage({
                   {l.description ? l.description.replace(/<[^>]*>/g, "") : "No description"}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xl font-bold text-blue-600">
+                  <span className="text-xl font-bold text-indigo-600">
                     ${Number(l.price).toFixed(0)}/mo
                   </span>
                   <span

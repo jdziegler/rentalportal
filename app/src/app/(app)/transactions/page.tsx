@@ -266,7 +266,7 @@ export default async function TransactionsPage({
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/transactions/${t.id}`}
-                            className="text-blue-600 hover:underline font-medium"
+                            className="text-gray-900 font-medium hover:text-indigo-600"
                           >
                             {t.details || "\u2014"}
                           </Link>
@@ -279,11 +279,11 @@ export default async function TransactionsPage({
                       </td>
                       <td className="px-6 py-4 text-gray-700">
                         {t.unit ? (
-                          <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                          <Link href={`/units/${t.unit.id}`} className="text-indigo-600 hover:underline">
                             {t.property?.name ? `${t.property.name} \u2014 ` : ""}{t.unit.name}
                           </Link>
                         ) : t.propertyId && t.property ? (
-                          <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
+                          <Link href={`/properties/${t.propertyId}`} className="text-indigo-600 hover:underline">
                             {t.property.name}
                           </Link>
                         ) : (
@@ -292,7 +292,7 @@ export default async function TransactionsPage({
                       </td>
                       <td className="px-6 py-4 text-gray-700">
                         {t.contactId && t.contact ? (
-                          <Link href={`/tenants/${t.contactId}`} className="text-blue-600 hover:underline">
+                          <Link href={`/tenants/${t.contactId}`} className="text-indigo-600 hover:underline">
                             {t.contact.firstName} {t.contact.lastName}
                           </Link>
                         ) : (
@@ -337,7 +337,7 @@ export default async function TransactionsPage({
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <Link
                       href={`/transactions/${t.id}`}
-                      className="font-medium text-blue-600 hover:underline truncate"
+                      className="font-medium text-gray-900 hover:text-indigo-600 truncate"
                     >
                       {t.details || `Transaction #${t.id.slice(0, 8)}`}
                     </Link>
@@ -376,11 +376,11 @@ export default async function TransactionsPage({
                   {(t.property?.name || t.contact) && (
                     <div className="text-xs text-gray-500 mt-1 truncate">
                       {t.unit ? (
-                        <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/units/${t.unit.id}`} className="text-indigo-600 hover:underline">
                           {t.property?.name ? `${t.property.name} \u2014 ` : ""}{t.unit.name}
                         </Link>
                       ) : t.propertyId && t.property ? (
-                        <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
+                        <Link href={`/properties/${t.propertyId}`} className="text-indigo-600 hover:underline">
                           {t.property.name}
                         </Link>
                       ) : (
@@ -390,7 +390,7 @@ export default async function TransactionsPage({
                         <>
                           {t.property?.name ? " \u2022 " : ""}
                           {t.contactId ? (
-                            <Link href={`/tenants/${t.contactId}`} className="text-blue-600 hover:underline">
+                            <Link href={`/tenants/${t.contactId}`} className="text-indigo-600 hover:underline">
                               {t.contact.firstName} {t.contact.lastName}
                             </Link>
                           ) : (
