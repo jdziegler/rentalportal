@@ -34,6 +34,43 @@ import { PrismaClient } from '@prisma/client';
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const prisma = new PrismaClient();
 
+// ── TC integer → Prisma enum mappers ──
+
+function mapLeaseStatus(n: number): string {
+  const m: Record<number, string> = { 0: "ACTIVE", 1: "EXPIRED", 2: "TERMINATED" };
+  return m[n] ?? "ACTIVE";
+}
+
+function mapLeaseType(n: number): string {
+  const m: Record<number, string> = { 1: "FIXED", 2: "MONTH_TO_MONTH" };
+  return m[n] ?? "FIXED";
+}
+
+function mapTransactionStatus(n: number): string {
+  const m: Record<number, string> = { 0: "UNPAID", 1: "PAID", 2: "PARTIAL", 3: "PENDING", 4: "WAIVED", 9: "VOIDED" };
+  return m[n] ?? "UNPAID";
+}
+
+function mapContactStatus(n: number): string {
+  const m: Record<number, string> = { 0: "PENDING", 1: "INVITED", 2: "ACTIVE", 3: "INACTIVE" };
+  return m[n] ?? "PENDING";
+}
+
+function mapPropertyType(n: number): string {
+  const m: Record<number, string> = { 1: "SINGLE_FAMILY", 2: "MULTI_FAMILY", 3: "COMMERCIAL" };
+  return m[n] ?? "MULTI_FAMILY";
+}
+
+function mapUnitType(n: number): string {
+  const m: Record<number, string> = { 1: "APARTMENT", 2: "HOUSE", 3: "ROOM" };
+  return m[n] ?? "APARTMENT";
+}
+
+function mapRentPeriod(n: number): string {
+  const m: Record<number, string> = { 1: "WEEKLY", 2: "BIWEEKLY", 5: "MONTHLY", 6: "QUARTERLY", 7: "YEARLY" };
+  return m[n] ?? "MONTHLY";
+}
+
 // Stats tracking
 const stats = {
   properties: { created: 0, updated: 0, skipped: 0 },
@@ -141,7 +178,7 @@ async function syncAll(
     const fields = {
       userId,
       name: a.name,
-      type: a.type ?? 2,
+      type: mapPropertyType(a.type ?? 2),
       year: a.year || null,
       currency: a.currency || 'USD',
       address: a.address1 || a.address?.street_address || a.name,
@@ -190,7 +227,7 @@ async function syncAll(
     const fields = {
       propertyId,
       name: a.name || `Unit ${u.id}`,
-      type: a.type ?? 1,
+      type: mapUnitType(a.type ?? 1),
       bedrooms: a.bedrooms || null,
       bathrooms: a.bathrooms || null,
       size: a.size || null,
@@ -241,7 +278,7 @@ async function syncAll(
       city: a.city || null,
       state: a.state || null,
       zip: a.zip || null,
-      status: a.status ?? 0,
+      status: mapContactStatus(a.status ?? 0),
       notes: a.notes || null,
       archivedAt: a.archived_at ? new Date(a.archived_at) : null,
     };
@@ -283,7 +320,7 @@ async function syncAll(
     if (!unitId || !contactId) { stats.leases.skipped++; continue; }
 
     const rentAmount = a.temp_transactions?.rent?.amount ?? a.amount ?? 0;
-    const rentPeriod = a.temp_transactions?.rent?.period ?? 5;
+    const rentPeriod = mapRentPeriod(a.temp_transactions?.rent?.period ?? 5);
     const rentDueDay = a.temp_transactions?.rent?.day ?? 1;
     const currency = a.temp_transactions?.rent?.currency ?? a.currency ?? 'USD';
     const deposit = a.temp_transactions?.deposits?.[0]?.amount ?? a.deposit ?? null;
@@ -293,14 +330,14 @@ async function syncAll(
       unitId,
       contactId,
       name: a.name || null,
-      leaseType: a.lease_type ?? 1,
-      leaseStatus: a.lease_status ?? 0,
+      leaseType: mapLeaseType(a.lease_type ?? 1),
+      leaseStatus: mapLeaseStatus(a.lease_status ?? 0),
       rentAmount,
       rentPeriod,
       rentDueDay,
       currency,
-      rentFrom: new Date(a.rent_from),
-      rentTo: a.rent_to ? new Date(a.rent_to) : null,
+      startDate: new Date(a.rent_from),
+      endDate: a.rent_to ? new Date(a.rent_to) : null,
       deposit,
     };
 
@@ -401,12 +438,12 @@ async function syncAll(
       currency: a.currency || 'USD',
       date: new Date(a.date),
       paidAt: a.paid_at ? new Date(a.paid_at) : null,
-      paid: a.paid ?? 0,
+      paidAmount: a.paid ?? 0,
       balance: a.balance ?? 0,
       details: a.details || a.name || null,
       note: a.note || null,
       isRecurring: a.is_recurring ?? false,
-      status: a.status ?? 0,
+      status: mapTransactionStatus(a.status ?? 0),
     };
 
     if (dryRun) {

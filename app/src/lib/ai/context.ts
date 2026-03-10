@@ -1,30 +1,32 @@
 import { prisma } from "@/lib/db";
 
-const LEASE_STATUS: Record<number, string> = {
-  0: "Active",
-  1: "Expired",
-  2: "Terminated",
+const LEASE_STATUS_LABEL: Record<string, string> = {
+  ACTIVE: "Active",
+  EXPIRED: "Expired",
+  TERMINATED: "Terminated",
 };
 
-const TX_STATUS: Record<number, string> = {
-  0: "Unpaid",
-  1: "Paid",
-  2: "Partial",
-  3: "Pending",
+const TX_STATUS_LABEL: Record<string, string> = {
+  UNPAID: "Unpaid",
+  PAID: "Paid",
+  PARTIAL: "Partial",
+  PENDING: "Pending",
+  WAIVED: "Waived",
+  VOIDED: "Voided",
 };
 
-const MX_STATUS: Record<number, string> = {
-  0: "Open",
-  1: "In Progress",
-  2: "Completed",
-  3: "Cancelled",
+const MX_STATUS_LABEL: Record<string, string> = {
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
-const MX_PRIORITY: Record<number, string> = {
-  0: "Low",
-  1: "Medium",
-  2: "High",
-  3: "Urgent",
+const MX_PRIORITY_LABEL: Record<string, string> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  URGENT: "Urgent",
 };
 
 export async function loadPortfolioContext(userId: string): Promise<string> {
@@ -36,7 +38,7 @@ export async function loadPortfolioContext(userId: string): Promise<string> {
           units: {
             include: {
               leases: {
-                where: { leaseStatus: 0 },
+                where: { leaseStatus: "ACTIVE" },
                 include: {
                   contact: {
                     select: {
@@ -75,7 +77,7 @@ export async function loadPortfolioContext(userId: string): Promise<string> {
         },
       }),
       prisma.maintenanceRequest.findMany({
-        where: { userId, status: { in: [0, 1] } },
+        where: { userId, status: { in: ["OPEN", "IN_PROGRESS"] } },
         orderBy: { createdAt: "desc" },
         take: 30,
         select: {
@@ -127,10 +129,10 @@ export async function loadPortfolioContext(userId: string): Promise<string> {
           lines.push(`    - Phone: ${lease.contact.phone}`);
         lines.push(`    - Rent: $${lease.rentAmount}/mo, due day ${lease.rentDueDay}`);
         lines.push(
-          `    - Lease: ${lease.rentFrom.toISOString().split("T")[0]} to ${lease.rentTo ? lease.rentTo.toISOString().split("T")[0] : "month-to-month"}`,
+          `    - Lease: ${lease.startDate.toISOString().split("T")[0]} to ${lease.endDate ? lease.endDate.toISOString().split("T")[0] : "month-to-month"}`,
         );
         lines.push(
-          `    - Status: ${LEASE_STATUS[lease.leaseStatus] ?? "Unknown"}`,
+          `    - Status: ${LEASE_STATUS_LABEL[lease.leaseStatus] ?? "Unknown"}`,
         );
         lines.push(`    - Grace period: ${lease.gracePeriod} days`);
         if (lease.lateFeeEnabled) {
@@ -153,7 +155,7 @@ export async function loadPortfolioContext(userId: string): Promise<string> {
         .filter(Boolean)
         .join(" / ");
       lines.push(
-        `- **${tx.details ?? tx.category}** (ID: ${tx.id}): $${tx.amount} [${TX_STATUS[tx.status] ?? "Unknown"}] ${tx.date.toISOString().split("T")[0]}${where ? ` @ ${where}` : ""}${who}${tx.note ? ` — "${tx.note}"` : ""}`,
+        `- **${tx.details ?? tx.category}** (ID: ${tx.id}): $${tx.amount} [${TX_STATUS_LABEL[tx.status] ?? "Unknown"}] ${tx.date.toISOString().split("T")[0]}${where ? ` @ ${where}` : ""}${who}${tx.note ? ` — "${tx.note}"` : ""}`,
       );
     }
   }
@@ -168,7 +170,7 @@ export async function loadPortfolioContext(userId: string): Promise<string> {
         ? ` — reported by ${mx.contact.firstName} ${mx.contact.lastName}`
         : "";
       lines.push(
-        `- **${mx.title}** (ID: ${mx.id}): [${MX_STATUS[mx.status] ?? "Unknown"}] [${MX_PRIORITY[mx.priority] ?? "Medium"}] @ ${where}${who} — opened ${mx.createdAt.toISOString().split("T")[0]}`,
+        `- **${mx.title}** (ID: ${mx.id}): [${MX_STATUS_LABEL[mx.status] ?? "Unknown"}] [${MX_PRIORITY_LABEL[mx.priority] ?? "Medium"}] @ ${where}${who} — opened ${mx.createdAt.toISOString().split("T")[0]}`,
       );
     }
   }

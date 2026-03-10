@@ -17,11 +17,11 @@ export async function executeMutations(
     try {
       switch (mut.op) {
         case "update_maintenance_status": {
-          const statusMap: Record<string, number> = {
-            open: 0,
-            in_progress: 1,
-            completed: 2,
-            cancelled: 3,
+          const statusMap: Record<string, string> = {
+            open: "OPEN",
+            in_progress: "IN_PROGRESS",
+            completed: "COMPLETED",
+            cancelled: "CANCELLED",
           };
           const statusVal = statusMap[mut.status as string];
           if (statusVal === undefined) {
@@ -47,7 +47,7 @@ export async function executeMutations(
             where: { id: mut.id },
             data: {
               status: statusVal,
-              ...(statusVal === 2 ? { completedAt: new Date() } : {}),
+              ...(statusVal === "COMPLETED" ? { completedAt: new Date() } : {}),
             },
           });
           results.push({ op: mut.op, status: "ok" });
@@ -55,11 +55,11 @@ export async function executeMutations(
         }
 
         case "update_maintenance_priority": {
-          const prioMap: Record<string, number> = {
-            low: 0,
-            medium: 1,
-            high: 2,
-            urgent: 3,
+          const prioMap: Record<string, string> = {
+            low: "LOW",
+            medium: "MEDIUM",
+            high: "HIGH",
+            urgent: "URGENT",
           };
           const prioVal = prioMap[mut.priority as string];
           if (prioVal === undefined) {
@@ -120,8 +120,8 @@ export async function executeMutations(
           await prisma.transaction.update({
             where: { id: mut.id },
             data: {
-              status: 2,
-              paid: tx.amount,
+              status: "PAID",
+              paidAmount: tx.amount,
               balance: 0,
               paidAt: new Date(),
             },
@@ -151,10 +151,10 @@ export async function executeMutations(
         }
 
         case "update_lease_status": {
-          const statusMap: Record<string, number> = {
-            active: 0,
-            expired: 1,
-            terminated: 2,
+          const statusMap: Record<string, string> = {
+            active: "ACTIVE",
+            expired: "EXPIRED",
+            terminated: "TERMINATED",
           };
           const statusVal = statusMap[mut.status as string];
           if (statusVal === undefined) {
