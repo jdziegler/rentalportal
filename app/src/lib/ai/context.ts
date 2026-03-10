@@ -8,8 +8,8 @@ const LEASE_STATUS: Record<number, string> = {
 
 const TX_STATUS: Record<number, string> = {
   0: "Unpaid",
-  1: "Partial",
-  2: "Paid",
+  1: "Paid",
+  2: "Partial",
   3: "Pending",
 };
 
