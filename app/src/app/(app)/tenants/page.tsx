@@ -41,23 +41,42 @@ export default async function TenantsPage({
     role: "tenant",
   };
 
-  if (statusFilter !== "all") {
+  // Active = has an active lease (as primary or co-tenant)
+  // Inactive = no active leases
+  if (statusFilter === "2") {
+    where.OR = [
+      { leases: { some: { leaseStatus: 0 } } },
+      { leaseTenants: { some: { lease: { leaseStatus: 0 } } } },
+    ];
+  } else if (statusFilter === "3") {
+    where.AND = [
+      { leases: { none: { leaseStatus: 0 } } },
+      { leaseTenants: { none: { lease: { leaseStatus: 0 } } } },
+    ];
+  } else if (statusFilter !== "all") {
     where.status = parseInt(statusFilter, 10);
   }
 
   if (params.search) {
-    where.OR = [
+    const searchConditions = [
       { firstName: { contains: params.search, mode: "insensitive" } },
       { lastName: { contains: params.search, mode: "insensitive" } },
       { email: { contains: params.search, mode: "insensitive" } },
       { phone: { contains: params.search, mode: "insensitive" } },
     ];
+    // If we already have an OR/AND from status filter, nest search in AND
+    if (where.OR || where.AND) {
+      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), { OR: searchConditions }];
+    } else {
+      where.OR = searchConditions;
+    }
   }
 
   const tenants = await prisma.contact.findMany({
     where,
     include: {
       _count: { select: { leases: true } },
+      // Primary leases (where this contact is the main tenant)
       leases: {
         where: { leaseStatus: 0 },
         select: {
@@ -66,6 +85,23 @@ export default async function TenantsPage({
             select: {
               name: true,
               property: { select: { name: true } },
+            },
+          },
+        },
+      },
+      // Co-tenant leases (via join table)
+      leaseTenants: {
+        where: { lease: { leaseStatus: 0 }, isPrimary: false },
+        select: {
+          lease: {
+            select: {
+              id: true,
+              unit: {
+                select: {
+                  name: true,
+                  property: { select: { name: true } },
+                },
+              },
             },
           },
         },
@@ -109,7 +145,14 @@ export default async function TenantsPage({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {tenants.map((t) => {
-                  const activeLeaseCount = t.leases.length;
+                  // Combine primary leases + co-tenant leases, dedup by lease id
+                  const coTenantLeases = t.leaseTenants.map((lt) => lt.lease);
+                  const seenIds = new Set(t.leases.map((l) => l.id));
+                  const allActiveLeases = [
+                    ...t.leases,
+                    ...coTenantLeases.filter((l) => !seenIds.has(l.id)),
+                  ];
+                  const hasActiveLease = allActiveLeases.length > 0;
                   return (
                     <tr key={t.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
@@ -129,15 +172,15 @@ export default async function TenantsPage({
                       <td className="px-6 py-4">
                         <Badge
                           variant="secondary"
-                          className={statusColors[t.status] || ""}
+                          className={hasActiveLease ? statusColors[2] : statusColors[3]}
                         >
-                          {statusLabels[t.status] || "Unknown"}
+                          {hasActiveLease ? "Active" : "Inactive"}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-gray-700">
-                        {activeLeaseCount > 0 ? (
+                        {allActiveLeases.length > 0 ? (
                           <span>
-                            {t.leases.map((l, i) => (
+                            {allActiveLeases.map((l, i) => (
                               <span key={l.id}>
                                 {i > 0 && ", "}
                                 <Link
@@ -161,7 +204,13 @@ export default async function TenantsPage({
           </div>
           <div className="md:hidden space-y-3">
             {tenants.map((t) => {
-              const activeLeaseCount = t.leases.length;
+              const coTenantLeases = t.leaseTenants.map((lt) => lt.lease);
+              const seenIds = new Set(t.leases.map((l) => l.id));
+              const allActiveLeases = [
+                ...t.leases,
+                ...coTenantLeases.filter((l) => !seenIds.has(l.id)),
+              ];
+              const hasActiveLease = allActiveLeases.length > 0;
               return (
                 <Link
                   key={t.id}
@@ -174,9 +223,9 @@ export default async function TenantsPage({
                     </span>
                     <Badge
                       variant="secondary"
-                      className={statusColors[t.status] || ""}
+                      className={hasActiveLease ? statusColors[2] : statusColors[3]}
                     >
-                      {statusLabels[t.status] || "Unknown"}
+                      {hasActiveLease ? "Active" : "Inactive"}
                     </Badge>
                   </div>
                   {(t.email || t.phone) && (
@@ -184,10 +233,10 @@ export default async function TenantsPage({
                       {[t.email, t.phone].filter(Boolean).join(" \u00b7 ")}
                     </div>
                   )}
-                  {activeLeaseCount > 0 && (
+                  {allActiveLeases.length > 0 && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {activeLeaseCount} active {activeLeaseCount === 1 ? "lease" : "leases"}:{" "}
-                      {t.leases.map((l, i) => (
+                      {allActiveLeases.length} active {allActiveLeases.length === 1 ? "lease" : "leases"}:{" "}
+                      {allActiveLeases.map((l, i) => (
                         <span key={l.id}>
                           {i > 0 && ", "}
                           {l.unit?.property?.name || "?"} - {l.unit?.name || "?"}

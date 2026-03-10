@@ -286,6 +286,15 @@ async function syncAll(
     });
     leaseMap.set(tcId, record.id);
 
+    // Ensure primary tenant is in LeaseTenant join table
+    if (!dryRun && contactId) {
+      await prisma.leaseTenant.upsert({
+        where: { leaseId_contactId: { leaseId: record.id, contactId } },
+        create: { leaseId: record.id, contactId, isPrimary: true },
+        update: { isPrimary: true },
+      });
+    }
+
     if (record.createdAt.getTime() === record.updatedAt.getTime()) {
       stats.leases.created++;
     } else {

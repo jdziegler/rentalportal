@@ -43,23 +43,40 @@ export default async function TenantDetailPage({
 
   if (!tenant) notFound();
 
-  const leases = await prisma.lease.findMany({
-    where: { contactId: id, userId: session.user.id, leaseStatus: 0 },
-    select: {
-      id: true,
-      rentAmount: true,
-      rentFrom: true,
-      rentTo: true,
-      paymentToken: true,
-      unit: {
-        select: {
-          id: true,
-          name: true,
-          property: { select: { id: true, name: true } },
-        },
+  const leaseSelect = {
+    id: true,
+    rentAmount: true,
+    rentFrom: true,
+    rentTo: true,
+    paymentToken: true,
+    leaseType: true,
+    unit: {
+      select: {
+        id: true,
+        name: true,
+        property: { select: { id: true, name: true } },
       },
     },
+  } as const;
+
+  // Primary leases (where this contact is the main tenant)
+  const primaryLeases = await prisma.lease.findMany({
+    where: { contactId: id, userId: session.user.id, leaseStatus: 0 },
+    select: leaseSelect,
   });
+
+  // Co-tenant leases (via join table, where not primary)
+  const coTenantEntries = await prisma.leaseTenant.findMany({
+    where: { contactId: id, isPrimary: false, lease: { leaseStatus: 0, userId: session.user.id } },
+    select: { lease: { select: leaseSelect } },
+  });
+
+  // Merge and dedup
+  const primaryIds = new Set(primaryLeases.map((l) => l.id));
+  const leases = [
+    ...primaryLeases,
+    ...coTenantEntries.map((lt) => lt.lease).filter((l) => !primaryIds.has(l.id)),
+  ];
 
   // Balance summary: total charges vs total paid
   const balanceAgg = await prisma.transaction.aggregate({
@@ -206,9 +223,9 @@ export default async function TenantDetailPage({
               <dd>
                 <Badge
                   variant="secondary"
-                  className={statusColors[tenant.status] || ""}
+                  className={leases.length > 0 ? statusColors[2] : statusColors[3]}
                 >
-                  {statusLabels[tenant.status] || "Unknown"}
+                  {leases.length > 0 ? "Active" : "Inactive"}
                 </Badge>
               </dd>
             </div>

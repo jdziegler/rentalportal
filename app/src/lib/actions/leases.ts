@@ -71,6 +71,11 @@ export async function createLease(formData: FormData) {
       },
     });
 
+    // Add primary tenant to LeaseTenant join table
+    await tx.leaseTenant.create({
+      data: { leaseId: created.id, contactId, isPrimary: true },
+    });
+
     await tx.unit.update({
       where: { id: unitId },
       data: { isRented: true },
@@ -175,6 +180,7 @@ export async function renewLease(id: string) {
 
   const existing = await prisma.lease.findUniqueOrThrow({
     where: { id, userId },
+    include: { tenants: true },
   });
 
   // Expire the old lease
@@ -211,6 +217,17 @@ export async function renewLease(id: string) {
       lateFeeMaxAmount: existing.lateFeeMaxAmount,
     },
   });
+
+  // Copy all tenants (primary + co-tenants) to the renewed lease
+  if (existing.tenants.length > 0) {
+    await prisma.leaseTenant.createMany({
+      data: existing.tenants.map((t) => ({
+        leaseId: newLease.id,
+        contactId: t.contactId,
+        isPrimary: t.isPrimary,
+      })),
+    });
+  }
 
   revalidatePath("/leases");
   revalidatePath(`/leases/${id}`);

@@ -157,6 +157,7 @@ model Contact {
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   leases       Lease[]
+  leaseTenants LeaseTenant[]
   transactions Transaction[]
   maintenanceRequests MaintenanceRequest[]
   autoPayConfigs AutoPayConfig[]
@@ -199,10 +200,25 @@ model Lease {
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   unit         Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
   contact      Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tenants      LeaseTenant[]
   transactions Transaction[]
   autoPayConfig AutoPayConfig?
   messages      Message[]
   documents     LeaseDocument[]
+}
+
+model LeaseTenant {
+  id        String   @id @default(cuid())
+  leaseId   String
+  contactId String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  lease   Lease   @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([leaseId, contactId])
+  @@index([contactId])
 }
 
 model Transaction {
