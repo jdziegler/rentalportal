@@ -10,6 +10,8 @@ import { SetPageContext } from "@/components/set-page-context";
 import MessagesSection from "./messages-section";
 import { PortalLinkButton, PaymentLinkButton } from "./portal-link-button";
 import TenantScreening from "@/components/tenant-screening";
+import { TRANSACTION_STATUS, statusLabels as txStatusLabels, statusStyles as txStatusStyles } from "@/lib/transaction-status";
+import { getSubcategoryLabel, getSubcategoryColor } from "@/lib/transaction-categories";
 
 const statusLabels: Record<number, string> = {
   0: "Pending",
@@ -89,11 +91,52 @@ export default async function TenantDetailPage({
     readAt: m.readAt?.toISOString() || null,
   }));
 
-  const recentTransactions = await prisma.transaction.findMany({
+  // Overdue candidates: unpaid/partial income transactions for this tenant
+  const overdueCandiatesPromise = prisma.transaction.findMany({
+    where: {
+      contactId: id,
+      userId: session.user.id,
+      category: "income",
+      status: { in: [TRANSACTION_STATUS.UNPAID, TRANSACTION_STATUS.PARTIAL] },
+    },
+    include: {
+      property: { select: { id: true, name: true } },
+      unit: { select: { name: true } },
+      lease: { select: { gracePeriod: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  const recentTransactionsPromise = prisma.transaction.findMany({
     where: { contactId: id, userId: session.user.id },
+    include: {
+      property: { select: { id: true, name: true } },
+    },
     orderBy: { date: "desc" },
     take: 5,
   });
+
+  const [overdueCandidates, recentTransactions] = await Promise.all([
+    overdueCandiatesPromise,
+    recentTransactionsPromise,
+  ]);
+
+  // Filter to actually overdue: past due + grace, OR late fees that are unpaid
+  const today = new Date();
+  const overdueTransactions = overdueCandidates.filter((t) => {
+    // Late fees are inherently overdue if unpaid
+    if (t.subcategory === "late_fee") return true;
+    // For other charges: past due date + grace period
+    const grace = t.lease?.gracePeriod ?? 5;
+    const dueDate = new Date(t.date);
+    dueDate.setDate(dueDate.getDate() + grace);
+    return dueDate < today;
+  });
+
+  const totalOverdue = overdueTransactions.reduce(
+    (sum, t) => sum + Number(t.balance),
+    0
+  );
 
   const fullName = `${tenant.firstName} ${tenant.lastName}`;
   const address = [tenant.address, tenant.city, tenant.state, tenant.zip]
@@ -259,6 +302,79 @@ export default async function TenantDetailPage({
         </div>
       </div>
 
+      {/* Overdue Transactions */}
+      {overdueTransactions.length > 0 && (
+        <div className="mt-6 bg-white rounded-lg shadow overflow-x-auto border-l-4 border-red-500">
+          <div className="flex items-center justify-between p-6 pb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold text-red-700">
+                Overdue
+              </h2>
+              <Badge variant="secondary" className="bg-red-100 text-red-700">
+                {overdueTransactions.length} item{overdueTransactions.length !== 1 ? "s" : ""} &middot; ${totalOverdue.toFixed(2)}
+              </Badge>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/transactions?contactId=${id}&status=overdue&range=all_time`}>View All</Link>
+            </Button>
+          </div>
+          <table className="w-full text-sm">
+            <thead className="bg-red-50 text-left text-red-800">
+              <tr>
+                <th className="px-6 py-3 font-medium">Date</th>
+                <th className="px-6 py-3 font-medium">Details</th>
+                <th className="px-6 py-3 font-medium">Property</th>
+                <th className="px-6 py-3 font-medium">Status</th>
+                <th className="px-6 py-3 font-medium text-right">Amount</th>
+                <th className="px-6 py-3 font-medium text-right">Balance</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-red-100">
+              {overdueTransactions.map((t) => (
+                <tr key={t.id} className="hover:bg-red-50/50">
+                  <td className="px-6 py-3 text-gray-700">
+                    {t.date.toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-3">
+                    <div className="flex items-center gap-2">
+                      <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline font-medium">
+                        {t.details || "—"}
+                      </Link>
+                      {t.subcategory && (
+                        <Badge variant="secondary" className={`text-xs py-0 ${getSubcategoryColor(t.subcategory)}`}>
+                          {getSubcategoryLabel(t.subcategory)}
+                        </Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-3 text-gray-700">
+                    {t.propertyId && t.property ? (
+                      <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
+                        {t.property.name}
+                      </Link>
+                    ) : "—"}
+                  </td>
+                  <td className="px-6 py-3">
+                    <Badge
+                      variant="secondary"
+                      className={txStatusStyles[t.status] || "bg-gray-100 text-gray-700"}
+                    >
+                      {txStatusLabels[t.status] || "Unknown"}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-3 text-right font-medium text-gray-900">
+                    ${Number(t.amount).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-3 text-right font-medium text-red-600">
+                    ${Number(t.balance).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* Recent Transactions */}
       {recentTransactions.length > 0 && (
         <div className="mt-6 bg-white rounded-lg shadow overflow-x-auto">
@@ -275,7 +391,9 @@ export default async function TenantDetailPage({
               <tr>
                 <th className="px-6 py-3 font-medium">Date</th>
                 <th className="px-6 py-3 font-medium">Details</th>
+                <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium text-right">Amount</th>
+                <th className="px-6 py-3 font-medium text-right">Balance</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -287,9 +405,24 @@ export default async function TenantDetailPage({
                       {t.date.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-3">
-                      <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline font-medium">
-                        {t.details || "—"}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline font-medium">
+                          {t.details || "—"}
+                        </Link>
+                        {t.subcategory && (
+                          <Badge variant="secondary" className={`text-xs py-0 ${getSubcategoryColor(t.subcategory)}`}>
+                            {getSubcategoryLabel(t.subcategory)}
+                          </Badge>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-3">
+                      <Badge
+                        variant="secondary"
+                        className={txStatusStyles[t.status] || "bg-gray-100 text-gray-700"}
+                      >
+                        {txStatusLabels[t.status] || "Unknown"}
+                      </Badge>
                     </td>
                     <td
                       className={`px-6 py-3 text-right font-medium ${
@@ -298,6 +431,9 @@ export default async function TenantDetailPage({
                     >
                       {isIncome ? "+" : "-"}$
                       {Math.abs(Number(t.amount)).toFixed(2)}
+                    </td>
+                    <td className="px-6 py-3 text-right text-gray-700">
+                      ${Number(t.balance).toFixed(2)}
                     </td>
                   </tr>
                 );
