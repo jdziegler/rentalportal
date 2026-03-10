@@ -89,14 +89,17 @@ export default async function PropertiesPage({
   return (
     <div>
       <SetPageContext label="/Properties" context={`Properties list: ${totalCount} properties (page ${page}). User can see property names, addresses, types, unit counts, and occupancy rates.`} />
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
-        <Button asChild>
-          <Link href="/properties/new">Add Property</Link>
-        </Button>
+      <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="flex items-center justify-between px-6 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
+          <Button asChild>
+            <Link href="/properties/new">Add Property</Link>
+          </Button>
+        </div>
+        <div className="border-t border-gray-200 px-6 py-4">
+          <ListFilters basePath="/properties" filters={filters} bare />
+        </div>
       </div>
-
-      <ListFilters basePath="/properties" filters={filters} />
 
       {properties.length === 0 ? (
         <EmptyState

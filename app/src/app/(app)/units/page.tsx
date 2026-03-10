@@ -108,14 +108,17 @@ export default async function UnitsPage({
   return (
     <div>
       <SetPageContext label="/Units" context={`Units list: ${totalCount} units (page ${page}). User can see unit names, properties, bed/bath counts, rent prices, and occupancy status.`} />
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Units</h1>
-        <Button asChild>
-          <Link href="/units/new">Add Unit</Link>
-        </Button>
+      <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="flex items-center justify-between px-6 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Units</h1>
+          <Button asChild>
+            <Link href="/units/new">Add Unit</Link>
+          </Button>
+        </div>
+        <div className="border-t border-gray-200 px-6 py-4">
+          <ListFilters basePath="/units" filters={filters} bare />
+        </div>
       </div>
-
-      <ListFilters basePath="/units" filters={filters} />
 
       {units.length === 0 ? (
         <EmptyState
