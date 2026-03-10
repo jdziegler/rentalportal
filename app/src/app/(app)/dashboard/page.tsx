@@ -52,7 +52,7 @@ export default async function DashboardPage({
     prisma.property.count({ where: { userId, archivedAt: null } }),
     prisma.unit.count({ where: { property: { userId } } }),
     prisma.unit.count({ where: { property: { userId }, isRented: true } }),
-    prisma.lease.count({ where: { userId, leaseStatus: 0 } }),
+    prisma.lease.count({ where: { userId, leaseStatus: "ACTIVE" } }),
     prisma.contact.count({ where: { userId, role: "tenant" } }),
     prisma.transaction.aggregate({
       where: { userId, category: "income", date: { gte: startOfMonth, lte: endOfMonth } },
@@ -82,14 +82,14 @@ export default async function DashboardPage({
     prisma.lease.findMany({
       where: {
         userId,
-        leaseStatus: 0,
-        rentTo: { gte: now, lte: new Date(now.getTime() + 30 * 86400000) },
+        leaseStatus: "ACTIVE",
+        endDate: { gte: now, lte: new Date(now.getTime() + 30 * 86400000) },
       },
       include: {
         unit: { select: { name: true, property: { select: { name: true } } } },
         contact: { select: { firstName: true, lastName: true } },
       },
-      orderBy: { rentTo: "asc" },
+      orderBy: { endDate: "asc" },
       take: 5,
     }),
     // Upcoming rent due in next 7 days
@@ -97,7 +97,7 @@ export default async function DashboardPage({
       where: {
         userId,
         category: "income",
-        status: 0, // UNPAID
+        status: "UNPAID",
         date: { gte: now, lte: sevenDaysOut },
       },
       include: {
@@ -113,7 +113,7 @@ export default async function DashboardPage({
       where: {
         userId,
         category: "income",
-        status: { in: [0, 2] }, // UNPAID or PARTIAL
+        status: { in: ["UNPAID", "PARTIAL"] },
         balance: { gt: 0 },
         date: { lt: now },
       },
@@ -332,7 +332,7 @@ export default async function DashboardPage({
               <tbody className="divide-y divide-gray-100">
                 {expiringLeases.map((l) => {
                   const daysLeft = Math.ceil(
-                    (l.rentTo!.getTime() - now.getTime()) / 86400000
+                    (l.endDate!.getTime() - now.getTime()) / 86400000
                   );
                   return (
                     <tr key={l.id} className="hover:bg-gray-50">

@@ -8,18 +8,18 @@ import { TenantFilters } from "@/components/tenant-filters";
 import { SetPageContext } from "@/components/set-page-context";
 import { EmptyState } from "@/components/empty-state";
 
-const statusLabels: Record<number, string> = {
-  0: "Pending",
-  1: "Invited",
-  2: "Active",
-  3: "Inactive",
+const statusLabels: Record<string, string> = {
+  PENDING: "Pending",
+  INVITED: "Invited",
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
 };
 
-const statusColors: Record<number, string> = {
-  0: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-  1: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  2: "bg-green-100 text-green-700 hover:bg-green-100",
-  3: "bg-gray-100 text-gray-500 hover:bg-gray-100",
+const statusColors: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+  INVITED: "bg-blue-100 text-blue-700 hover:bg-blue-100",
+  ACTIVE: "bg-green-100 text-green-700 hover:bg-green-100",
+  INACTIVE: "bg-gray-100 text-gray-500 hover:bg-gray-100",
 };
 
 export default async function TenantsPage({
@@ -34,7 +34,7 @@ export default async function TenantsPage({
   if (!session?.user?.id) redirect("/login");
 
   const params = await searchParams;
-  const statusFilter = params.status ?? "2"; // default to Active
+  const statusFilter = params.status ?? "ACTIVE"; // default to Active
 
   const where: Record<string, unknown> = {
     userId: session.user.id,
@@ -43,18 +43,18 @@ export default async function TenantsPage({
 
   // Active = has an active lease (as primary or co-tenant)
   // Inactive = no active leases
-  if (statusFilter === "2") {
+  if (statusFilter === "ACTIVE") {
     where.OR = [
-      { leases: { some: { leaseStatus: 0 } } },
-      { leaseTenants: { some: { lease: { leaseStatus: 0 } } } },
+      { leases: { some: { leaseStatus: "ACTIVE" } } },
+      { leaseTenants: { some: { lease: { leaseStatus: "ACTIVE" } } } },
     ];
-  } else if (statusFilter === "3") {
+  } else if (statusFilter === "INACTIVE") {
     where.AND = [
-      { leases: { none: { leaseStatus: 0 } } },
-      { leaseTenants: { none: { lease: { leaseStatus: 0 } } } },
+      { leases: { none: { leaseStatus: "ACTIVE" } } },
+      { leaseTenants: { none: { lease: { leaseStatus: "ACTIVE" } } } },
     ];
   } else if (statusFilter !== "all") {
-    where.status = parseInt(statusFilter, 10);
+    where.status = statusFilter;
   }
 
   if (params.search) {
@@ -78,7 +78,7 @@ export default async function TenantsPage({
       _count: { select: { leases: true } },
       // Primary leases (where this contact is the main tenant)
       leases: {
-        where: { leaseStatus: 0 },
+        where: { leaseStatus: "ACTIVE" },
         select: {
           id: true,
           unit: {
@@ -91,7 +91,7 @@ export default async function TenantsPage({
       },
       // Co-tenant leases (via join table)
       leaseTenants: {
-        where: { lease: { leaseStatus: 0 }, isPrimary: false },
+        where: { lease: { leaseStatus: "ACTIVE" }, isPrimary: false },
         select: {
           lease: {
             select: {
@@ -172,7 +172,7 @@ export default async function TenantsPage({
                       <td className="px-6 py-4">
                         <Badge
                           variant="secondary"
-                          className={hasActiveLease ? statusColors[2] : statusColors[3]}
+                          className={hasActiveLease ? statusColors["ACTIVE"] : statusColors["INACTIVE"]}
                         >
                           {hasActiveLease ? "Active" : "Inactive"}
                         </Badge>
@@ -223,7 +223,7 @@ export default async function TenantsPage({
                     </span>
                     <Badge
                       variant="secondary"
-                      className={hasActiveLease ? statusColors[2] : statusColors[3]}
+                      className={hasActiveLease ? statusColors["ACTIVE"] : statusColors["INACTIVE"]}
                     >
                       {hasActiveLease ? "Active" : "Inactive"}
                     </Badge>

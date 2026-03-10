@@ -13,18 +13,18 @@ import TenantScreening from "@/components/tenant-screening";
 import { TRANSACTION_STATUS, statusLabels as txStatusLabels, statusStyles as txStatusStyles } from "@/lib/transaction-status";
 import { getSubcategoryLabel, getSubcategoryColor } from "@/lib/transaction-categories";
 
-const statusLabels: Record<number, string> = {
-  0: "Pending",
-  1: "Invited",
-  2: "Active",
-  3: "Inactive",
+const statusLabels: Record<string, string> = {
+  PENDING: "Pending",
+  INVITED: "Invited",
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
 };
 
-const statusColors: Record<number, string> = {
-  0: "bg-yellow-100 text-yellow-700",
-  1: "bg-blue-100 text-blue-700",
-  2: "bg-green-100 text-green-700",
-  3: "bg-gray-100 text-gray-500",
+const statusColors: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-700",
+  INVITED: "bg-blue-100 text-blue-700",
+  ACTIVE: "bg-green-100 text-green-700",
+  INACTIVE: "bg-gray-100 text-gray-500",
 };
 
 export default async function TenantDetailPage({
@@ -46,8 +46,8 @@ export default async function TenantDetailPage({
   const leaseSelect = {
     id: true,
     rentAmount: true,
-    rentFrom: true,
-    rentTo: true,
+    startDate: true,
+    endDate: true,
     paymentToken: true,
     leaseType: true,
     unit: {
@@ -61,13 +61,13 @@ export default async function TenantDetailPage({
 
   // Primary leases (where this contact is the main tenant)
   const primaryLeases = await prisma.lease.findMany({
-    where: { contactId: id, userId: session.user.id, leaseStatus: 0 },
+    where: { contactId: id, userId: session.user.id, leaseStatus: "ACTIVE" },
     select: leaseSelect,
   });
 
   // Co-tenant leases (via join table, where not primary)
   const coTenantEntries = await prisma.leaseTenant.findMany({
-    where: { contactId: id, isPrimary: false, lease: { leaseStatus: 0, userId: session.user.id } },
+    where: { contactId: id, isPrimary: false, lease: { leaseStatus: "ACTIVE", userId: session.user.id } },
     select: { lease: { select: leaseSelect } },
   });
 
@@ -84,13 +84,13 @@ export default async function TenantDetailPage({
       contactId: id,
       userId: session.user.id,
       category: "income",
-      status: { in: [0, 1, 2, 3] }, // exclude voided/waived
+      status: { in: ["UNPAID", "PAID", "PARTIAL", "PENDING"] }, // exclude voided/waived
     },
-    _sum: { amount: true, paid: true, balance: true },
+    _sum: { amount: true, paidAmount: true, balance: true },
   });
 
   const totalCharged = Number(balanceAgg._sum.amount || 0);
-  const totalPaid = Number(balanceAgg._sum.paid || 0);
+  const totalPaid = Number(balanceAgg._sum.paidAmount || 0);
   const totalBalance = Number(balanceAgg._sum.balance || 0);
 
   // Messages
@@ -223,7 +223,7 @@ export default async function TenantDetailPage({
               <dd>
                 <Badge
                   variant="secondary"
-                  className={leases.length > 0 ? statusColors[2] : statusColors[3]}
+                  className={leases.length > 0 ? statusColors["ACTIVE"] : statusColors["INACTIVE"]}
                 >
                   {leases.length > 0 ? "Active" : "Inactive"}
                 </Badge>
@@ -302,11 +302,11 @@ export default async function TenantDetailPage({
                       </Link>
                     </td>
                     <td className="px-6 py-3 text-gray-700">
-                      {lease.rentFrom.toLocaleDateString()}
+                      {lease.startDate.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-3 text-gray-700">
-                      {lease.rentTo
-                        ? lease.rentTo.toLocaleDateString()
+                      {lease.endDate
+                        ? lease.endDate.toLocaleDateString()
                         : "—"}
                     </td>
                     <td className="px-6 py-3">

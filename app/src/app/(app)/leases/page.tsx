@@ -9,16 +9,16 @@ import { ListFilters, type FilterConfig } from "@/components/list-filters";
 import { Pagination } from "@/components/pagination";
 import { EmptyState } from "@/components/empty-state";
 
-const leaseStatusLabels: Record<number, string> = {
-  0: "Active",
-  1: "Expired",
-  2: "Terminated",
+const leaseStatusLabels: Record<string, string> = {
+  ACTIVE: "Active",
+  EXPIRED: "Expired",
+  TERMINATED: "Terminated",
 };
 
-const leaseStatusStyles: Record<number, string> = {
-  0: "bg-green-100 text-green-700 hover:bg-green-100",
-  1: "bg-red-100 text-red-700 hover:bg-red-100",
-  2: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+const leaseStatusStyles: Record<string, string> = {
+  ACTIVE: "bg-green-100 text-green-700 hover:bg-green-100",
+  EXPIRED: "bg-red-100 text-red-700 hover:bg-red-100",
+  TERMINATED: "bg-gray-100 text-gray-700 hover:bg-gray-100",
 };
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
@@ -33,7 +33,7 @@ export default async function LeasesPage({
 
   const params = await searchParams;
   const search = typeof params.search === "string" ? params.search : "";
-  const statusParam = typeof params.status === "string" ? params.status : "0";
+  const statusParam = typeof params.status === "string" ? params.status : "ACTIVE";
   const propertyId = typeof params.propertyId === "string" ? params.propertyId : "";
   const page = Math.max(1, parseInt(String(params.page || "1"), 10) || 1);
   const rawPageSize = parseInt(String(params.pageSize || "25"), 10);
@@ -43,7 +43,7 @@ export default async function LeasesPage({
   const where: Record<string, unknown> = { userId: session.user.id };
 
   if (statusParam && statusParam !== "all") {
-    where.leaseStatus = parseInt(statusParam, 10);
+    where.leaseStatus = statusParam;
   }
 
   if (propertyId && propertyId !== "all") {
@@ -69,7 +69,7 @@ export default async function LeasesPage({
         unit: { select: { id: true, name: true, property: { select: { id: true, name: true } } } },
         contact: { select: { id: true, firstName: true, lastName: true } },
       },
-      orderBy: { rentFrom: "desc" },
+      orderBy: { startDate: "desc" },
       skip,
       take: pageSize,
     }),
@@ -91,12 +91,12 @@ export default async function LeasesPage({
       key: "status",
       label: "Status",
       type: "select",
-      defaultValue: "0",
+      defaultValue: "ACTIVE",
       options: [
         { value: "all", label: "All Statuses" },
-        { value: "0", label: "Active" },
-        { value: "1", label: "Expired" },
-        { value: "2", label: "Terminated" },
+        { value: "ACTIVE", label: "Active" },
+        { value: "EXPIRED", label: "Expired" },
+        { value: "TERMINATED", label: "Terminated" },
       ],
     },
     {
@@ -161,10 +161,10 @@ export default async function LeasesPage({
                       </Link>
                     </td>
                     <td className="px-6 py-4 text-gray-700">
-                      {l.rentFrom.toLocaleDateString()}
+                      {l.startDate.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-gray-700">
-                      {l.rentTo?.toLocaleDateString() || "---"}
+                      {l.endDate?.toLocaleDateString() || "---"}
                     </td>
                     <td className="px-6 py-4 text-gray-700">
                       ${Number(l.rentAmount).toFixed(2)}
@@ -209,8 +209,8 @@ export default async function LeasesPage({
                 </div>
                 <div className="text-xs text-gray-500">
                   ${Number(l.rentAmount).toFixed(2)} &middot;{" "}
-                  {l.rentFrom.toLocaleDateString()} &middot;{" "}
-                  {l.rentTo?.toLocaleDateString() || "---"}
+                  {l.startDate.toLocaleDateString()} &middot;{" "}
+                  {l.endDate?.toLocaleDateString() || "---"}
                 </div>
               </Link>
             ))}

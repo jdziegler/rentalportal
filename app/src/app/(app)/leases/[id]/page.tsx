@@ -10,21 +10,21 @@ import { terminateLease, renewLease } from "@/lib/actions/leases";
 import { SetPageContext } from "@/components/set-page-context";
 import LeaseDocuments from "@/components/lease-documents";
 
-const leaseTypeLabels: Record<number, string> = {
-  1: "Fixed",
-  2: "Month-to-Month",
+const leaseTypeLabels: Record<string, string> = {
+  FIXED: "Fixed",
+  MONTH_TO_MONTH: "Month-to-Month",
 };
 
-const leaseStatusLabels: Record<number, string> = {
-  0: "Active",
-  1: "Expired",
-  2: "Terminated",
+const leaseStatusLabels: Record<string, string> = {
+  ACTIVE: "Active",
+  EXPIRED: "Expired",
+  TERMINATED: "Terminated",
 };
 
-const leaseStatusStyles: Record<number, string> = {
-  0: "bg-green-100 text-green-700 hover:bg-green-100",
-  1: "bg-red-100 text-red-700 hover:bg-red-100",
-  2: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+const leaseStatusStyles: Record<string, string> = {
+  ACTIVE: "bg-green-100 text-green-700 hover:bg-green-100",
+  EXPIRED: "bg-red-100 text-red-700 hover:bg-red-100",
+  TERMINATED: "bg-gray-100 text-gray-700 hover:bg-gray-100",
 };
 
 export default async function LeaseDetailPage({
@@ -66,13 +66,13 @@ export default async function LeaseDetailPage({
       leaseId: id,
       userId: session.user.id,
       category: "income",
-      status: { in: [0, 1, 2, 3] },
+      status: { in: ["UNPAID", "PAID", "PARTIAL", "PENDING"] },
     },
-    _sum: { amount: true, paid: true, balance: true },
+    _sum: { amount: true, paidAmount: true, balance: true },
   });
 
   const totalCharged = Number(balanceAgg._sum.amount || 0);
-  const totalPaid = Number(balanceAgg._sum.paid || 0);
+  const totalPaid = Number(balanceAgg._sum.paidAmount || 0);
   const totalBalance = Number(balanceAgg._sum.balance || 0);
 
   // Recent transactions for this lease
@@ -90,7 +90,7 @@ export default async function LeaseDetailPage({
 
   return (
     <div>
-      <SetPageContext label={`/${leaseName}`} context={`Lease detail: "${leaseName}" — ${leaseStatusLabel}. Tenant: ${tenantName} (ID: ${lease.contact.id}). Property: ${propertyName}, Unit: ${unitName}. Rent: $${Number(lease.rentAmount).toLocaleString()}/mo, due day ${lease.rentDueDay}, grace ${lease.gracePeriod} days. Period: ${lease.rentFrom.toISOString().split("T")[0]} to ${lease.rentTo ? lease.rentTo.toISOString().split("T")[0] : "month-to-month"}. Lease ID: ${lease.id}. Full details and recent transactions visible on screen.`} />
+      <SetPageContext label={`/${leaseName}`} context={`Lease detail: "${leaseName}" — ${leaseStatusLabel}. Tenant: ${tenantName} (ID: ${lease.contact.id}). Property: ${propertyName}, Unit: ${unitName}. Rent: $${Number(lease.rentAmount).toLocaleString()}/mo, due day ${lease.rentDueDay}, grace ${lease.gracePeriod} days. Period: ${lease.startDate.toISOString().split("T")[0]} to ${lease.endDate ? lease.endDate.toISOString().split("T")[0] : "month-to-month"}. Lease ID: ${lease.id}. Full details and recent transactions visible on screen.`} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
@@ -119,7 +119,7 @@ export default async function LeaseDetailPage({
           <Button variant="outline" asChild>
             <Link href={`/leases/${id}/edit`}>Edit</Link>
           </Button>
-          {lease.leaseStatus === 0 && (
+          {lease.leaseStatus === "ACTIVE" && (
             <>
               <form action={renewWithId}>
                 <Button type="submit" variant="outline">
@@ -172,10 +172,10 @@ export default async function LeaseDetailPage({
             <div className="flex justify-between">
               <dt className="text-gray-600">Lease Type</dt>
               <dd className="text-gray-900 font-medium">
-                {lease.leaseType === 1 &&
-                 lease.leaseStatus === 0 &&
-                 lease.rentTo &&
-                 lease.rentTo < new Date()
+                {lease.leaseType === "FIXED" &&
+                 lease.leaseStatus === "ACTIVE" &&
+                 lease.endDate &&
+                 lease.endDate < new Date()
                   ? "Month-to-Month"
                   : leaseTypeLabels[lease.leaseType] || "Unknown"}
               </dd>
@@ -207,13 +207,13 @@ export default async function LeaseDetailPage({
             <div className="flex justify-between">
               <dt className="text-gray-600">Start Date</dt>
               <dd className="text-gray-900">
-                {lease.rentFrom.toLocaleDateString()}
+                {lease.startDate.toLocaleDateString()}
               </dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-gray-600">End Date</dt>
               <dd className="text-gray-900">
-                {lease.rentTo?.toLocaleDateString() || "---"}
+                {lease.endDate?.toLocaleDateString() || "---"}
               </dd>
             </div>
             {lease.deposit && (

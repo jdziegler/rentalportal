@@ -15,13 +15,13 @@ export function TenantFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const status = searchParams.get("status") ?? "2";
+  const status = searchParams.get("status") ?? "ACTIVE";
   const search = searchParams.get("search") || "";
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
-      if (value && value !== "all" && !(key === "status" && value === "2")) {
+      if (value && value !== "all" && !(key === "status" && value === "ACTIVE")) {
         params.set(key, value);
       } else {
         params.delete(key);
@@ -34,7 +34,7 @@ export function TenantFilters() {
     router.push("/tenants");
   }
 
-  const hasFilters = status !== "2" || search !== "";
+  const hasFilters = status !== "ACTIVE" || search !== "";
 
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-6">
@@ -50,10 +50,10 @@ export function TenantFilters() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="0">Pending</SelectItem>
-              <SelectItem value="1">Invited</SelectItem>
-              <SelectItem value="2">Active</SelectItem>
-              <SelectItem value="3">Inactive</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="INVITED">Invited</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="INACTIVE">Inactive</SelectItem>
             </SelectContent>
           </Select>
         </div>
