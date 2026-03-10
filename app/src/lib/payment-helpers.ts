@@ -10,7 +10,7 @@ function fromCents(cents: number): number {
 }
 
 /**
- * Recalculates paid/balance/status on a transaction from its Payment records.
+ * Recalculates paidAmount/balance/status on a transaction from its Payment records.
  * This is the single source of truth — call after any payment create/delete.
  */
 export async function recalcTransactionFromPayments(transactionId: string) {
@@ -41,7 +41,7 @@ export async function recalcTransactionFromPayments(transactionId: string) {
   // Only update status if it's in a payment-related state (not waived/voided)
   const currentStatus = transaction.status;
   let newStatus = currentStatus;
-  if (currentStatus <= TRANSACTION_STATUS.PENDING) {
+  if (["UNPAID", "PAID", "PARTIAL", "PENDING"].includes(currentStatus)) {
     if (isFullyPaid) {
       newStatus = TRANSACTION_STATUS.PAID;
     } else if (isPartial) {
@@ -63,7 +63,7 @@ export async function recalcTransactionFromPayments(transactionId: string) {
   await prisma.transaction.update({
     where: { id: transactionId },
     data: {
-      paid: fromCents(netPaidCents),
+      paidAmount: fromCents(netPaidCents),
       balance: fromCents(balanceCents),
       status: newStatus,
       paidAt: isFullyPaid ? (lastPayment?.date ?? new Date()) : null,

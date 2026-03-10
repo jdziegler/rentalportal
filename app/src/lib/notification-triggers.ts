@@ -37,7 +37,7 @@ export async function runNotificationCron(): Promise<NotificationCronResult> {
     const upcomingCharges = await prisma.transaction.findMany({
       where: {
         source: "auto_rent",
-        status: { in: [0, 2] }, // unpaid or partial
+        status: { in: ["UNPAID", "PARTIAL"] },
         balance: { gt: 0 },
         date: {
           gte: new Date(reminderDate.getFullYear(), reminderDate.getMonth(), reminderDate.getDate()),
@@ -101,7 +101,7 @@ export async function runNotificationCron(): Promise<NotificationCronResult> {
     const overdueCharges = await prisma.transaction.findMany({
       where: {
         source: "auto_rent",
-        status: { in: [0, 2] },
+        status: { in: ["UNPAID", "PARTIAL"] },
         balance: { gt: 0 },
         date: {
           gte: new Date(overdueDate.getFullYear(), overdueDate.getMonth(), overdueDate.getDate()),
@@ -164,9 +164,9 @@ export async function runNotificationCron(): Promise<NotificationCronResult> {
 
       const expiringLeases = await prisma.lease.findMany({
         where: {
-          leaseStatus: 0,
-          leaseType: 1, // fixed-term only
-          rentTo: {
+          leaseStatus: "ACTIVE",
+          leaseType: "FIXED",
+          endDate: {
             gte: new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()),
             lt: new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1),
           },
@@ -196,7 +196,7 @@ export async function runNotificationCron(): Promise<NotificationCronResult> {
               tenantName: `${lease.contact.firstName} ${lease.contact.lastName}`,
               propertyName: lease.unit?.property?.name || "Property",
               unitName: lease.unit?.name || "Unit",
-              leaseEndDate: lease.rentTo?.toLocaleDateString() || "",
+              leaseEndDate: lease.endDate?.toLocaleDateString() || "",
               daysUntilExpiry: daysOut,
             },
             email: lease.contact.email,

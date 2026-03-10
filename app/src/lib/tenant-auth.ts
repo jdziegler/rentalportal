@@ -68,7 +68,7 @@ export async function findContactsByIdentifier(identifier: string) {
     include: {
       user: { select: { id: true, name: true } },
       leases: {
-        where: { leaseStatus: 0 }, // active only
+        where: { leaseStatus: "ACTIVE" }, // active only
         include: {
           unit: {
             include: { property: { select: { id: true, name: true, address: true, city: true, state: true } } },

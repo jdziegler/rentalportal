@@ -1,30 +1,30 @@
-// Matches TenantCloud status codes
+// Matches Prisma TransactionStatus enum
 export const TRANSACTION_STATUS = {
-  UNPAID: 0,
-  PAID: 1,
-  PARTIAL: 2,
-  PENDING: 3,
-  WAIVED: 4,
-  VOIDED: 9,
+  UNPAID: "UNPAID",
+  PAID: "PAID",
+  PARTIAL: "PARTIAL",
+  PENDING: "PENDING",
+  WAIVED: "WAIVED",
+  VOIDED: "VOIDED",
 } as const;
 
-export const statusLabels: Record<number, string> = {
-  0: "Unpaid",
-  1: "Paid",
-  2: "Partial",
-  3: "Pending",
-  4: "Waived",
-  9: "Voided",
+export const statusLabels: Record<string, string> = {
+  UNPAID: "Unpaid",
+  PAID: "Paid",
+  PARTIAL: "Partial",
+  PENDING: "Pending",
+  WAIVED: "Waived",
+  VOIDED: "Voided",
 };
 
-export const statusStyles: Record<number, string> = {
-  0: "bg-red-100 text-red-700 hover:bg-red-100",
-  1: "bg-green-100 text-green-700 hover:bg-green-100",
-  2: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-  3: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  4: "bg-gray-100 text-gray-700 hover:bg-gray-100",
-  9: "bg-gray-100 text-gray-500 hover:bg-gray-100 line-through",
+export const statusStyles: Record<string, string> = {
+  UNPAID: "bg-red-100 text-red-700 hover:bg-red-100",
+  PAID: "bg-green-100 text-green-700 hover:bg-green-100",
+  PARTIAL: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+  PENDING: "bg-blue-100 text-blue-700 hover:bg-blue-100",
+  WAIVED: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+  VOIDED: "bg-gray-100 text-gray-500 hover:bg-gray-100 line-through",
 };
 
 // Statuses that count toward "active" totals (not voided/waived)
-export const ACTIVE_STATUSES = [0, 1, 2, 3];
+export const ACTIVE_STATUSES = ["UNPAID", "PAID", "PARTIAL", "PENDING"];

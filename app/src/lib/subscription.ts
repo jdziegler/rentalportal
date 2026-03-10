@@ -67,7 +67,7 @@ export async function checkPlanLimit(
     });
   } else {
     current = await prisma.lease.count({
-      where: { userId, leaseStatus: 0 }, // active leases only
+      where: { userId, leaseStatus: "ACTIVE" }, // active leases only
     });
   }
 

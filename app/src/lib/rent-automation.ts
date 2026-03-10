@@ -28,7 +28,7 @@ export async function generateRentCharges(): Promise<RentGenerationResult> {
   // Get all users with their rent schedule config
   const users = await prisma.user.findMany({
     where: {
-      leases: { some: { leaseStatus: 0 } },
+      leases: { some: { leaseStatus: "ACTIVE" } },
     },
     include: {
       rentScheduleConfig: true,
@@ -51,7 +51,7 @@ export async function generateRentCharges(): Promise<RentGenerationResult> {
     const leases = await prisma.lease.findMany({
       where: {
         userId: user.id,
-        leaseStatus: 0,
+        leaseStatus: "ACTIVE",
       },
       include: {
         unit: {
@@ -69,10 +69,10 @@ export async function generateRentCharges(): Promise<RentGenerationResult> {
     for (const lease of leases) {
       try {
         // Check if lease has started
-        if (lease.rentFrom > today) continue;
+        if (lease.startDate > today) continue;
         // Fixed-term leases with a past end date are treated as month-to-month
         // (only skip if lease was explicitly terminated/expired via leaseStatus)
-        // leaseStatus is already filtered to 0 (active) in the query above
+        // leaseStatus is already filtered to "ACTIVE" in the query above
 
         // Determine the target month for this charge
         let targetYear = today.getFullYear();
@@ -109,7 +109,7 @@ export async function generateRentCharges(): Promise<RentGenerationResult> {
             date: dueDate,
             balance: lease.rentAmount,
             details: `Monthly rent - ${propertyName} / ${unitName}`,
-            status: 0, // UNPAID
+            status: "UNPAID",
             source: "auto_rent",
             billingPeriod,
           },
@@ -155,7 +155,7 @@ export async function processAutoPayments(): Promise<AutoPayResult> {
   const transactions = await prisma.transaction.findMany({
     where: {
       source: "auto_rent",
-      status: { in: [0] }, // UNPAID only (not partial, not pending)
+      status: { in: ["UNPAID"] }, // UNPAID only (not partial, not pending)
       date: { lte: today },
       stripePaymentIntentId: null, // no payment attempted yet
     },
@@ -305,8 +305,8 @@ export async function processAutoPayments(): Promise<AutoPayResult> {
           stripePaymentIntentId: paymentIntent.id,
           stripePaymentStatus: paymentIntent.status,
           paymentMethod: payMethod,
-          status: isPaid ? 1 : isProcessing ? 3 : 0,
-          paid: isPaid ? txn.amount : 0,
+          status: isPaid ? "PAID" : isProcessing ? "PENDING" : "UNPAID",
+          paidAmount: isPaid ? txn.amount : 0,
           balance: isPaid ? 0 : txn.amount,
           paidAt: isPaid ? new Date() : null,
           retryCount: { increment: txn.stripePaymentStatus === "failed" ? 1 : 0 },
@@ -355,7 +355,7 @@ export async function assessLateFees(): Promise<LateFeeResult> {
   const overdueTransactions = await prisma.transaction.findMany({
     where: {
       source: "auto_rent",
-      status: { in: [0, 2] }, // UNPAID or PARTIAL
+      status: { in: ["UNPAID", "PARTIAL"] },
       balance: { gt: 0 },
     },
     include: {
@@ -483,7 +483,7 @@ export async function assessLateFees(): Promise<LateFeeResult> {
           currency: lease.currency,
           date: today,
           details: `Late fee - ${propertyName} / ${unitName}`,
-          status: 0, // UNPAID
+          status: "UNPAID",
           source: "auto_late_fee",
           billingPeriod,
           parentId: txn.id,
