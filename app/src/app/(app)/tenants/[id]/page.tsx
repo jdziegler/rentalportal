@@ -121,7 +121,7 @@ export default async function TenantDetailPage({
       unit: { select: { name: true } },
       lease: { select: { gracePeriod: true } },
     },
-    orderBy: { date: "asc" },
+    orderBy: { date: "desc" },
   });
 
   const recentTransactionsPromise = prisma.transaction.findMany({
