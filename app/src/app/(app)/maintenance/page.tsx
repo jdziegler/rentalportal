@@ -133,19 +133,22 @@ export default async function MaintenancePage({
   return (
     <div>
       <SetPageContext label="/Maintenance" context={`Maintenance list: ${totalCount} requests shown (page ${page}). ${openCount} open, ${inProgressCount} in progress total. User can see title, property/unit, priority, status, reporter, and date.`} />
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Maintenance</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            {openCount} open, {inProgressCount} in progress
-          </p>
+      <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Maintenance</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {openCount} open, {inProgressCount} in progress
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/maintenance/new">New Request</Link>
+          </Button>
         </div>
-        <Button asChild>
-          <Link href="/maintenance/new">New Request</Link>
-        </Button>
+        <div className="border-t border-gray-200 px-6 py-4">
+          <ListFilters basePath="/maintenance" filters={filters} bare />
+        </div>
       </div>
-
-      <ListFilters basePath="/maintenance" filters={filters} />
 
       {requests.length === 0 ? (
         <EmptyState
