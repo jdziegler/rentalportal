@@ -9,32 +9,32 @@ import { ListFilters, type FilterConfig } from "@/components/list-filters";
 import { Pagination } from "@/components/pagination";
 import { EmptyState } from "@/components/empty-state";
 
-const priorityLabels: Record<number, string> = {
-  0: "Low",
-  1: "Medium",
-  2: "High",
-  3: "Urgent",
+const priorityLabels: Record<string, string> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  URGENT: "Urgent",
 };
 
-const priorityStyles: Record<number, string> = {
-  0: "bg-gray-100 text-gray-700 hover:bg-gray-100",
-  1: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  2: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-  3: "bg-red-100 text-red-700 hover:bg-red-100",
+const priorityStyles: Record<string, string> = {
+  LOW: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+  MEDIUM: "bg-blue-100 text-blue-700 hover:bg-blue-100",
+  HIGH: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+  URGENT: "bg-red-100 text-red-700 hover:bg-red-100",
 };
 
-const statusLabels: Record<number, string> = {
-  0: "Open",
-  1: "In Progress",
-  2: "Completed",
-  3: "Cancelled",
+const statusLabels: Record<string, string> = {
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
-const statusStyles: Record<number, string> = {
-  0: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-  1: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  2: "bg-green-100 text-green-700 hover:bg-green-100",
-  3: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+const statusStyles: Record<string, string> = {
+  OPEN: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+  IN_PROGRESS: "bg-blue-100 text-blue-700 hover:bg-blue-100",
+  COMPLETED: "bg-green-100 text-green-700 hover:bg-green-100",
+  CANCELLED: "bg-gray-100 text-gray-700 hover:bg-gray-100",
 };
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
@@ -59,11 +59,11 @@ export default async function MaintenancePage({
   const where: Record<string, unknown> = { userId: session.user.id };
 
   if (statusParam && statusParam !== "all") {
-    where.status = parseInt(statusParam, 10);
+    where.status = statusParam;
   }
 
   if (priorityParam && priorityParam !== "all") {
-    where.priority = parseInt(priorityParam, 10);
+    where.priority = priorityParam;
   }
 
   if (propertyId && propertyId !== "all") {
@@ -90,8 +90,8 @@ export default async function MaintenancePage({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
-    prisma.maintenanceRequest.count({ where: { userId: session.user.id, status: 0 } }),
-    prisma.maintenanceRequest.count({ where: { userId: session.user.id, status: 1 } }),
+    prisma.maintenanceRequest.count({ where: { userId: session.user.id, status: "OPEN" } }),
+    prisma.maintenanceRequest.count({ where: { userId: session.user.id, status: "IN_PROGRESS" } }),
   ]);
 
   const filters: FilterConfig[] = [
@@ -101,10 +101,10 @@ export default async function MaintenancePage({
       type: "select",
       options: [
         { value: "all", label: "All Statuses" },
-        { value: "0", label: "Open" },
-        { value: "1", label: "In Progress" },
-        { value: "2", label: "Completed" },
-        { value: "3", label: "Cancelled" },
+        { value: "OPEN", label: "Open" },
+        { value: "IN_PROGRESS", label: "In Progress" },
+        { value: "COMPLETED", label: "Completed" },
+        { value: "CANCELLED", label: "Cancelled" },
       ],
     },
     {
@@ -113,10 +113,10 @@ export default async function MaintenancePage({
       type: "select",
       options: [
         { value: "all", label: "All Priorities" },
-        { value: "0", label: "Low" },
-        { value: "1", label: "Medium" },
-        { value: "2", label: "High" },
-        { value: "3", label: "Urgent" },
+        { value: "LOW", label: "Low" },
+        { value: "MEDIUM", label: "Medium" },
+        { value: "HIGH", label: "High" },
+        { value: "URGENT", label: "Urgent" },
       ],
     },
     {

@@ -9,10 +9,10 @@ import { ListFilters, type FilterConfig } from "@/components/list-filters";
 import { Pagination } from "@/components/pagination";
 import { EmptyState } from "@/components/empty-state";
 
-const unitTypes: Record<number, string> = {
-  1: "Apartment",
-  2: "House",
-  3: "Room",
+const unitTypes: Record<string, string> = {
+  APARTMENT: "Apartment",
+  HOUSE: "House",
+  ROOM: "Room",
 };
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
@@ -62,7 +62,7 @@ export default async function UnitsPage({
         property: { select: { id: true, name: true } },
         leases: {
           orderBy: { updatedAt: "desc" },
-          select: { leaseStatus: true, rentTo: true, updatedAt: true },
+          select: { leaseStatus: true, endDate: true, updatedAt: true },
           take: 1,
         },
       },
@@ -181,7 +181,7 @@ export default async function UnitsPage({
                       {!u.isRented && (() => {
                         const lastLease = u.leases[0];
                         if (!lastLease) return null;
-                        const vacantSince = lastLease.rentTo || lastLease.updatedAt;
+                        const vacantSince = lastLease.endDate || lastLease.updatedAt;
                         const days = Math.floor((Date.now() - vacantSince.getTime()) / 86400000);
                         if (days <= 0) return null;
                         return (
@@ -219,7 +219,7 @@ export default async function UnitsPage({
                     {!u.isRented && (() => {
                       const lastLease = u.leases[0];
                       if (!lastLease) return null;
-                      const vacantSince = lastLease.rentTo || lastLease.updatedAt;
+                      const vacantSince = lastLease.endDate || lastLease.updatedAt;
                       const days = Math.floor((Date.now() - vacantSince.getTime()) / 86400000);
                       if (days <= 0) return null;
                       return <span className="text-xs text-gray-500">{days}d</span>;

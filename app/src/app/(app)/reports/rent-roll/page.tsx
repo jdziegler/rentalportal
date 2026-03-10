@@ -10,7 +10,7 @@ export default async function RentRollPage() {
   if (!session?.user?.id) redirect("/login");
 
   const leases = await prisma.lease.findMany({
-    where: { userId: session.user.id, leaseStatus: 0 },
+    where: { userId: session.user.id, leaseStatus: "ACTIVE" },
     include: {
       unit: {
         select: {
@@ -37,7 +37,7 @@ export default async function RentRollPage() {
       leaseId: { in: leaseIds },
       userId: session.user.id,
       category: "income",
-      status: { in: [0, 2] },
+      status: { in: ["UNPAID", "PARTIAL"] },
     },
     _sum: { balance: true },
   });
@@ -140,7 +140,7 @@ export default async function RentRollPage() {
                       <td className="px-6 py-3 text-right font-medium">${fmt(Number(l.rentAmount))}</td>
                       <td className="px-6 py-3">{l.rentDueDay}{l.rentDueDay === 1 ? "st" : l.rentDueDay === 2 ? "nd" : l.rentDueDay === 3 ? "rd" : "th"}</td>
                       <td className="px-6 py-3 text-gray-700">
-                        {l.rentFrom.toLocaleDateString()} — {l.rentTo ? l.rentTo.toLocaleDateString() : "MTM"}
+                        {l.startDate.toLocaleDateString()} — {l.endDate ? l.endDate.toLocaleDateString() : "MTM"}
                       </td>
                       <td className={`px-6 py-3 text-right font-medium ${outstanding > 0 ? "text-red-600" : "text-gray-900"}`}>
                         ${fmt(outstanding)}

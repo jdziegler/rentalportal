@@ -8,10 +8,10 @@ import { Separator } from "@/components/ui/separator";
 import { DeletePropertyButton } from "./delete-button";
 import { SetPageContext } from "@/components/set-page-context";
 
-const propertyTypes: Record<number, string> = {
-  1: "Single Family",
-  2: "Multi-Family",
-  3: "Commercial",
+const propertyTypes: Record<string, string> = {
+  SINGLE_FAMILY: "Single Family",
+  MULTI_FAMILY: "Multi-Family",
+  COMMERCIAL: "Commercial",
 };
 
 export default async function PropertyDetailPage({
@@ -30,7 +30,7 @@ export default async function PropertyDetailPage({
       units: {
         include: {
           leases: {
-            where: { leaseStatus: 0 },
+            where: { leaseStatus: "ACTIVE" },
             include: { contact: { select: { id: true, firstName: true, lastName: true } } },
             take: 1,
           },

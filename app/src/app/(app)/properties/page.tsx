@@ -9,10 +9,10 @@ import { ListFilters } from "@/components/list-filters";
 import { Pagination } from "@/components/pagination";
 import { EmptyState } from "@/components/empty-state";
 
-const propertyTypes: Record<number, string> = {
-  1: "Single Family",
-  2: "Multi-Family",
-  3: "Commercial",
+const propertyTypes: Record<string, string> = {
+  SINGLE_FAMILY: "Single Family",
+  MULTI_FAMILY: "Multi-Family",
+  COMMERCIAL: "Commercial",
 };
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
@@ -47,7 +47,7 @@ export default async function PropertiesPage({
   }
 
   if (type && type !== "all") {
-    where.type = parseInt(type, 10);
+    where.type = type;
   }
 
   const skip = (page - 1) * pageSize;
@@ -79,9 +79,9 @@ export default async function PropertiesPage({
       type: "select" as const,
       options: [
         { value: "all", label: "All Types" },
-        { value: "1", label: "Single Family" },
-        { value: "2", label: "Multi-Family" },
-        { value: "3", label: "Commercial" },
+        { value: "SINGLE_FAMILY", label: "Single Family" },
+        { value: "MULTI_FAMILY", label: "Multi-Family" },
+        { value: "COMMERCIAL", label: "Commercial" },
       ],
     },
   ];

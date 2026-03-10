@@ -8,10 +8,10 @@ import { Separator } from "@/components/ui/separator";
 import { DeleteUnitButton } from "./delete-button";
 import { SetPageContext } from "@/components/set-page-context";
 
-const unitTypes: Record<number, string> = {
-  1: "Apartment",
-  2: "House",
-  3: "Room",
+const unitTypes: Record<string, string> = {
+  APARTMENT: "Apartment",
+  HOUSE: "House",
+  ROOM: "Room",
 };
 
 export default async function UnitDetailPage({
@@ -29,7 +29,7 @@ export default async function UnitDetailPage({
     include: {
       property: { select: { id: true, name: true } },
       leases: {
-        where: { leaseStatus: 0 },
+        where: { leaseStatus: "ACTIVE" },
         include: { contact: { select: { id: true, firstName: true, lastName: true } } },
         take: 1,
       },
@@ -44,12 +44,12 @@ export default async function UnitDetailPage({
   let vacantDays = 0;
   if (!unit.isRented) {
     const lastLease = await prisma.lease.findFirst({
-      where: { unitId: id, leaseStatus: { in: [1, 2] } },
+      where: { unitId: id, leaseStatus: { in: ["EXPIRED", "TERMINATED"] } },
       orderBy: { updatedAt: "desc" },
-      select: { rentTo: true, updatedAt: true },
+      select: { endDate: true, updatedAt: true },
     });
     if (lastLease) {
-      const vacantSince = lastLease.rentTo || lastLease.updatedAt;
+      const vacantSince = lastLease.endDate || lastLease.updatedAt;
       vacantDays = Math.floor((Date.now() - vacantSince.getTime()) / 86400000);
     }
   }
@@ -194,14 +194,14 @@ export default async function UnitDetailPage({
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Lease Start</dt>
                   <dd className="text-gray-900">
-                    {activeLease.rentFrom.toLocaleDateString()}
+                    {activeLease.startDate.toLocaleDateString()}
                   </dd>
                 </div>
-                {activeLease.rentTo && (
+                {activeLease.endDate && (
                   <div className="flex justify-between">
                     <dt className="text-gray-600">Lease End</dt>
                     <dd className="text-gray-900">
-                      {activeLease.rentTo.toLocaleDateString()}
+                      {activeLease.endDate.toLocaleDateString()}
                     </dd>
                   </div>
                 )}

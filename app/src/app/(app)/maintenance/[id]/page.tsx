@@ -9,32 +9,32 @@ import { DeleteMaintenanceButton } from "./delete-button";
 import { StatusButtons } from "./status-buttons";
 import { SetPageContext } from "@/components/set-page-context";
 
-const priorityLabels: Record<number, string> = {
-  0: "Low",
-  1: "Medium",
-  2: "High",
-  3: "Urgent",
+const priorityLabels: Record<string, string> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  URGENT: "Urgent",
 };
 
-const priorityStyles: Record<number, string> = {
-  0: "bg-gray-100 text-gray-700 hover:bg-gray-100",
-  1: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  2: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-  3: "bg-red-100 text-red-700 hover:bg-red-100",
+const priorityStyles: Record<string, string> = {
+  LOW: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+  MEDIUM: "bg-blue-100 text-blue-700 hover:bg-blue-100",
+  HIGH: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+  URGENT: "bg-red-100 text-red-700 hover:bg-red-100",
 };
 
-const statusLabels: Record<number, string> = {
-  0: "Open",
-  1: "In Progress",
-  2: "Completed",
-  3: "Cancelled",
+const statusLabels: Record<string, string> = {
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
-const statusStyles: Record<number, string> = {
-  0: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-  1: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  2: "bg-green-100 text-green-700 hover:bg-green-100",
-  3: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+const statusStyles: Record<string, string> = {
+  OPEN: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+  IN_PROGRESS: "bg-blue-100 text-blue-700 hover:bg-blue-100",
+  COMPLETED: "bg-green-100 text-green-700 hover:bg-green-100",
+  CANCELLED: "bg-gray-100 text-gray-700 hover:bg-gray-100",
 };
 
 export default async function MaintenanceDetailPage({
@@ -96,7 +96,7 @@ export default async function MaintenanceDetailPage({
       </div>
 
       {/* Status Actions */}
-      {request.status < 2 && (
+      {(request.status === "OPEN" || request.status === "IN_PROGRESS") && (
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <StatusButtons id={id} currentStatus={request.status} />
         </div>

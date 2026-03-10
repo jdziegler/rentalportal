@@ -57,7 +57,7 @@ export default async function TransactionsPage({
     where.status = { in: [TRANSACTION_STATUS.UNPAID, TRANSACTION_STATUS.PARTIAL] };
     where.balance = { gt: 0 };
   } else if (params.status && params.status !== "all") {
-    where.status = parseInt(params.status, 10);
+    where.status = params.status;
   }
 
   // Date range filter — presets or custom
@@ -145,7 +145,7 @@ export default async function TransactionsPage({
   // Paid: sum of paid field on income transactions with status Paid (2)
   const paidAggPromise = prisma.transaction.aggregate({
     where: { ...where, category: "income", status: TRANSACTION_STATUS.PAID },
-    _sum: { paid: true },
+    _sum: { paidAmount: true },
   });
 
   // Outstanding: balance on unpaid/partial income transactions
@@ -171,7 +171,7 @@ export default async function TransactionsPage({
       overdueTransactionsPromise,
     ]);
 
-  const totalPaid = Number(paidAgg._sum.paid ?? 0);
+  const totalPaid = Number(paidAgg._sum.paidAmount ?? 0);
   const totalOutstanding = Number(outstandingAgg._sum.balance ?? 0);
 
   const today = new Date();
