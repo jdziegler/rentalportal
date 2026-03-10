@@ -62,14 +62,16 @@ export default async function ListingsPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Listings</h1>
-        <Link
-          href="/listings/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
-        >
-          Create Listing
-        </Link>
+      <div className="bg-white rounded-lg shadow-sm px-6 py-4 mb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Listings</h1>
+          <Link
+            href="/listings/new"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+          >
+            Create Listing
+          </Link>
+        </div>
       </div>
 
       <ListFilters basePath="/listings" filters={filters} />

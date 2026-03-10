@@ -113,11 +113,13 @@ export default async function LeasesPage({
   return (
     <div>
       <SetPageContext label="/Leases" context={`Leases list: ${totalCount} leases (page ${page}). User can see property/unit, tenant name, start/end dates, rent amount, and status.`} />
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Leases</h1>
-        <Button asChild>
-          <Link href="/leases/new">Add Lease</Link>
-        </Button>
+      <div className="bg-white rounded-lg shadow-sm px-6 py-4 mb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Leases</h1>
+          <Button asChild>
+            <Link href="/leases/new">Add Lease</Link>
+          </Button>
+        </div>
       </div>
 
       <ListFilters basePath="/leases" filters={filters} />
