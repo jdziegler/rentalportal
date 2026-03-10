@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       stripePaymentIntentId: paymentIntent.id,
       stripePaymentStatus: "pending",
       paymentMethod: paymentMethod === "us_bank_account" ? "ach" : "card",
-      status: 0,
+      status: "UNPAID",
     },
   });
 

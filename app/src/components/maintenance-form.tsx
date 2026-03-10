@@ -17,7 +17,7 @@ interface MaintenanceFormProps {
   defaultValues?: {
     title?: string;
     description?: string;
-    priority?: number;
+    priority?: string;
     category?: string;
     propertyId?: string;
     unitId?: string;
@@ -102,16 +102,16 @@ export function MaintenanceForm({
           <Label htmlFor="priority">Priority</Label>
           <Select
             name="priority"
-            defaultValue={String(defaultValues?.priority ?? 1)}
+            defaultValue={defaultValues?.priority ?? "MEDIUM"}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0">Low</SelectItem>
-              <SelectItem value="1">Medium</SelectItem>
-              <SelectItem value="2">High</SelectItem>
-              <SelectItem value="3">Urgent</SelectItem>
+              <SelectItem value="LOW">Low</SelectItem>
+              <SelectItem value="MEDIUM">Medium</SelectItem>
+              <SelectItem value="HIGH">High</SelectItem>
+              <SelectItem value="URGENT">Urgent</SelectItem>
             </SelectContent>
           </Select>
         </div>

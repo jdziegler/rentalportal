@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, MaintenancePriority, MaintenanceStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -13,7 +13,7 @@ async function main() {
   // Get a property with units
   const property = await prisma.property.findFirst({
     where: { userId: user.id },
-    include: { units: { take: 2, include: { leases: { where: { leaseStatus: 0 } } } } },
+    include: { units: { take: 2, include: { leases: { where: { leaseStatus: "ACTIVE" } } } } },
   });
   if (!property || property.units.length === 0) throw new Error("No property with units found");
 
@@ -33,7 +33,7 @@ async function main() {
         email: TEST_TENANT_EMAIL,
         phone: "5551234567",
         role: "tenant",
-        status: 0,
+        status: "PENDING",
         address: "42 Elm Street",
         city: "Bloomfield",
         state: "NJ",
@@ -47,7 +47,7 @@ async function main() {
 
   // Create a lease if one doesn't exist for this contact
   let lease = await prisma.lease.findFirst({
-    where: { contactId: contact.id, leaseStatus: 0 },
+    where: { contactId: contact.id, leaseStatus: "ACTIVE" },
   });
 
   if (!lease) {
@@ -57,13 +57,13 @@ async function main() {
         unitId: unit.id,
         contactId: contact.id,
         name: "Test Lease",
-        leaseType: 1,
-        leaseStatus: 0,
+        leaseType: "FIXED",
+        leaseStatus: "ACTIVE",
         rentAmount: 1650,
         rentDueDay: 1,
         gracePeriod: 5,
-        rentFrom: new Date("2025-06-01"),
-        rentTo: new Date("2026-05-31"),
+        startDate: new Date("2025-06-01"),
+        endDate: new Date("2026-05-31"),
         deposit: 2475,
         currency: "USD",
       },
@@ -83,8 +83,8 @@ async function main() {
       {
         title: "Kitchen faucet leaking",
         description: "The kitchen faucet has been dripping steadily for the past two days. Water pools under the sink cabinet. Needs repair ASAP before it damages the floor.",
-        priority: 2, // High
-        status: 0,   // Open
+        priority: MaintenancePriority.HIGH,
+        status: MaintenanceStatus.OPEN,
         category: "plumbing",
         propertyId: property.id,
         unitId: unit.id,
@@ -93,8 +93,8 @@ async function main() {
       {
         title: "Bathroom light fixture flickering",
         description: "The ceiling light in the main bathroom flickers intermittently. Tried replacing the bulb but the issue persists. Might be a wiring problem.",
-        priority: 1, // Medium
-        status: 1,   // In Progress
+        priority: MaintenancePriority.MEDIUM,
+        status: MaintenanceStatus.IN_PROGRESS,
         category: "electrical",
         propertyId: property.id,
         unitId: unit.id,
@@ -103,8 +103,8 @@ async function main() {
       {
         title: "HVAC not cooling properly",
         description: "The air conditioning is running but not reaching the set temperature. It's about 10 degrees warmer than the thermostat setting. Filter was replaced last month.",
-        priority: 3, // Urgent
-        status: 0,   // Open
+        priority: MaintenancePriority.URGENT,
+        status: MaintenanceStatus.OPEN,
         category: "hvac",
         propertyId: property.id,
         unitId: property.units[1]?.id || unit.id,
@@ -113,8 +113,8 @@ async function main() {
       {
         title: "Front door lock sticking",
         description: "The deadbolt on the front door is difficult to turn. Have to jiggle the key to get it to lock/unlock. Concerned about security.",
-        priority: 2, // High
-        status: 2,   // Completed
+        priority: MaintenancePriority.HIGH,
+        status: MaintenanceStatus.COMPLETED,
         category: "general",
         propertyId: property.id,
         unitId: unit.id,
@@ -124,8 +124,8 @@ async function main() {
       {
         title: "Dishwasher not draining",
         description: "After running a cycle, there's standing water at the bottom of the dishwasher. Tried cleaning the filter but it didn't help.",
-        priority: 1, // Medium
-        status: 0,   // Open
+        priority: MaintenancePriority.MEDIUM,
+        status: MaintenanceStatus.OPEN,
         category: "appliance",
         propertyId: property.id,
         unitId: unit.id,

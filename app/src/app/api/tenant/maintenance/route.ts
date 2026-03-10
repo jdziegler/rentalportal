@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
       title,
       description: description || null,
       category: category || "general",
-      priority: priority ?? 1,
-      status: 0,
+      priority: priority ?? "MEDIUM",
+      status: "OPEN",
     },
   });
 

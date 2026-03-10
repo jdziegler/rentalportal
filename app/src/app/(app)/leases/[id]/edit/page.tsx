@@ -68,9 +68,9 @@ export default async function EditLeasePage({
             rentAmount: Number(lease.rentAmount),
             rentDueDay: lease.rentDueDay,
             gracePeriod: lease.gracePeriod,
-            rentFrom: lease.rentFrom.toISOString().split("T")[0],
-            rentTo: lease.rentTo
-              ? lease.rentTo.toISOString().split("T")[0]
+            startDate: lease.startDate.toISOString().split("T")[0],
+            endDate: lease.endDate
+              ? lease.endDate.toISOString().split("T")[0]
               : "",
             deposit: lease.deposit ? Number(lease.deposit) : undefined,
             name: lease.name || "",

@@ -7,6 +7,69 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ── Enums ──
+
+enum LeaseStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum LeaseType {
+  FIXED
+  MONTH_TO_MONTH
+}
+
+enum TransactionStatus {
+  UNPAID
+  PAID
+  PARTIAL
+  PENDING
+  WAIVED
+  VOIDED
+}
+
+enum ContactStatus {
+  PENDING
+  INVITED
+  ACTIVE
+  INACTIVE
+}
+
+enum PropertyType {
+  SINGLE_FAMILY
+  MULTI_FAMILY
+  COMMERCIAL
+}
+
+enum UnitType {
+  APARTMENT
+  HOUSE
+  ROOM
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum RentPeriod {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
 // ── Auth (NextAuth) ──
 
 model User {
@@ -81,47 +144,53 @@ model VerificationToken {
 // ── Property Management ──
 
 model Property {
-  id          String  @id @default(cuid())
-  tcId        Int?    @unique  // TenantCloud external ID for sync
+  id          String       @id @default(cuid())
+  tcId        Int?         @unique
   userId      String
   name        String
-  type        Int     @default(2)  // 1=single, 2=multi
+  type        PropertyType @default(MULTI_FAMILY)
   year        String?
-  currency    String  @default("USD")
+  currency    String       @default("USD")
   address     String
   city        String
   state       String
   zip         String
   county      String?
-  country     String  @default("US")
+  country     String       @default("US")
+  lat         Float?
+  lng         Float?
+  yearBuilt   Int?
   description String?
-  amenities   Json    @default("[]")
+  amenities   Json         @default("[]")
   archivedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   units        Unit[]
+  leases       Lease[]
   transactions Transaction[]
   listings     Listing[]
   maintenanceRequests MaintenanceRequest[]
+
+  @@index([userId])
 }
 
 model Unit {
-  id          String  @id @default(cuid())
-  tcId        Int?    @unique  // TenantCloud external ID for sync
+  id          String   @id @default(cuid())
+  tcId        Int?     @unique
   propertyId  String
   name        String
-  type        Int     @default(1)
+  type        UnitType @default(APARTMENT)
   bedrooms    Int?
   bathrooms   Int?
   size        Int?
-  price       Decimal?  @db.Decimal(10, 2)
-  deposit     Decimal?  @db.Decimal(10, 2)
+  price       Decimal? @db.Decimal(10, 2)
+  deposit     Decimal? @db.Decimal(10, 2)
   description String?
-  isRented    Boolean @default(false)
-  features    Json    @default("[]")
-  petsAllowed Boolean @default(false)
+  isRented    Boolean  @default(false)
+  features    Json     @default("[]")
+  petsAllowed Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -130,13 +199,15 @@ model Unit {
   transactions Transaction[]
   listings     Listing[]
   maintenanceRequests MaintenanceRequest[]
+
+  @@index([propertyId])
 }
 
 model Contact {
-  id         String  @id @default(cuid())
-  tcId       Int?    @unique  // TenantCloud external ID for sync
+  id         String        @id @default(cuid())
+  tcId       Int?          @unique
   userId     String
-  role       String  @default("tenant")  // tenant, professional, owner
+  role       String        @default("tenant")
   firstName  String
   lastName   String
   email      String?
@@ -145,12 +216,17 @@ model Contact {
   city       String?
   state      String?
   zip        String?
-  status     Int     @default(0)  // 0=pending, 1=invited, 2=active, 3=inactive
+  status     ContactStatus @default(PENDING)
   notes      String?
   archivedAt DateTime?
 
   // Stripe (tenant payment method)
   stripeCustomerId String?
+
+  // Additional fields
+  dateOfBirth      DateTime?
+  emergencyContact String?
+  moveInDate       DateTime?
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -164,47 +240,61 @@ model Contact {
   messages       Message[]
   signatures     Signature[]
   screeningRequests ScreeningRequest[]
+
+  @@index([userId, status])
 }
 
 model Lease {
-  id          String   @id @default(cuid())
-  tcId        Int?     @unique  // TenantCloud external ID for sync
+  id          String      @id @default(cuid())
+  tcId        Int?        @unique
   userId      String
   propertyId  String?
   unitId      String
   contactId   String
   name        String?
-  leaseType   Int      @default(1)  // 1=fixed, 2=month-to-month
-  leaseStatus Int      @default(0)  // 0=active, 1=expired, 2=terminated
-  rentAmount  Decimal  @db.Decimal(10, 2)
-  rentPeriod  Int      @default(5)  // 5=monthly
-  rentDueDay  Int      @default(1)
-  gracePeriod Int      @default(5)  // days after due date before considered overdue
-  currency    String   @default("USD")
-  rentFrom    DateTime
-  rentTo      DateTime?
-  deposit     Decimal? @db.Decimal(10, 2)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  leaseType   LeaseType   @default(FIXED)
+  leaseStatus LeaseStatus @default(ACTIVE)
+  rentAmount  Decimal     @db.Decimal(10, 2)
+  rentPeriod  RentPeriod  @default(MONTHLY)
+  rentDueDay  Int         @default(1)
+  gracePeriod Int         @default(5)
+  currency    String      @default("USD")
+  startDate   DateTime
+  endDate     DateTime?
+  deposit     Decimal?    @db.Decimal(10, 2)
+  moveOutDate DateTime?
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  // Late fee config (embedded on lease for simplicity)
+  // Renewal tracking
+  previousLeaseId String?  @unique
+  previousLease   Lease?  @relation("LeaseRenewal", fields: [previousLeaseId], references: [id], onDelete: SetNull)
+  renewedLease    Lease?  @relation("LeaseRenewal")
+
+  // Late fee config
   lateFeeEnabled   Boolean @default(false)
-  lateFeeType      String  @default("flat")    // "flat" or "percentage"
-  lateFeeAmount    Decimal @default(0) @db.Decimal(10, 2)  // dollar amount or percentage
-  lateFeeAccrual   String  @default("one_time") // "one_time" or "daily"
-  lateFeeMaxAmount Decimal? @db.Decimal(10, 2)  // cap for daily accrual
+  lateFeeType      String  @default("flat")
+  lateFeeAmount    Decimal @default(0) @db.Decimal(10, 2)
+  lateFeeAccrual   String  @default("one_time")
+  lateFeeMaxAmount Decimal? @db.Decimal(10, 2)
 
   // Tenant portal
-  paymentToken String?  @unique @default(uuid())
+  paymentToken String? @unique @default(uuid())
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property     Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   unit         Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  contact      Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contact      Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
   tenants      LeaseTenant[]
   transactions Transaction[]
   autoPayConfig AutoPayConfig?
   messages      Message[]
   documents     LeaseDocument[]
+
+  @@index([userId, leaseStatus])
+  @@index([unitId, leaseStatus])
+  @@index([contactId])
 }
 
 model LeaseTenant {
@@ -222,36 +312,40 @@ model LeaseTenant {
 }
 
 model Transaction {
-  id          String   @id @default(cuid())
-  tcId        Int?     @unique  // TenantCloud external ID for sync
+  id          String            @id @default(cuid())
+  tcId        Int?              @unique
   userId      String
   propertyId  String?
   unitId      String?
   leaseId     String?
   contactId   String?
-  category    String   // income, expense
-  subcategory String?  // rent, late_fee, deposit, repair, utility, insurance, management, other
-  amount      Decimal  @db.Decimal(10, 2)
-  currency    String   @default("USD")
+  category    String
+  subcategory String?
+  amount      Decimal           @db.Decimal(10, 2)
+  currency    String            @default("USD")
   date        DateTime
   paidAt      DateTime?
-  paid        Decimal  @default(0) @db.Decimal(10, 2)
-  balance     Decimal  @default(0) @db.Decimal(10, 2)
+  paidAmount  Decimal           @default(0) @db.Decimal(10, 2)
+  balance     Decimal           @default(0) @db.Decimal(10, 2)
   details     String?
   note        String?
-  isRecurring Boolean  @default(false)
-  status      Int      @default(0)
+  isRecurring Boolean           @default(false)
+  status      TransactionStatus @default(UNPAID)
 
   // Automation fields
-  source        String?   // "auto_rent", "auto_late_fee", "manual", null
-  billingPeriod String?   // "2026-03" format for idempotency
-  parentId      String?   // links late fee to its rent charge
+  source        String?
+  billingPeriod String?
+  parentId      String?
   retryCount    Int       @default(0)
 
   // Stripe payment tracking
   stripePaymentIntentId String?
-  stripePaymentStatus   String?  // succeeded, processing, pending, failed
-  paymentMethod         String?  // ach, card, cash, check, etc.
+  stripePaymentStatus   String?
+  paymentMethod         String?
+
+  // Void tracking
+  voidedAt   DateTime?
+  voidReason String?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -266,6 +360,11 @@ model Transaction {
   payments Payment[]
 
   @@unique([leaseId, billingPeriod, source], name: "lease_period_source_unique")
+  @@index([userId, date])
+  @@index([userId, status])
+  @@index([leaseId])
+  @@index([contactId])
+  @@index([propertyId])
 }
 
 model Payment {
@@ -273,13 +372,13 @@ model Payment {
   transactionId String
   amount        Decimal  @db.Decimal(10, 2)
   date          DateTime @default(now())
-  method        String?  // cash, check, ach, card, other
+  method        String?
   note          String?
-  type          String   @default("payment") // payment, refund
+  type          String   @default("payment")
 
-  // Stripe tracking (one PaymentIntent per payment)
-  stripePaymentIntentId String?  @unique
-  stripePaymentStatus   String?  // succeeded, processing, failed
+  // Stripe tracking
+  stripePaymentIntentId String? @unique
+  stripePaymentStatus   String?
 
   createdAt DateTime @default(now())
 
@@ -288,7 +387,7 @@ model Payment {
 
 model Listing {
   id          String   @id @default(cuid())
-  tcId        Int?     @unique  // TenantCloud external ID for sync
+  tcId        Int?     @unique
   userId      String
   propertyId  String
   unitId      String
@@ -304,20 +403,20 @@ model Listing {
 }
 
 model MaintenanceRequest {
-  id          String   @id @default(cuid())
+  id          String              @id @default(cuid())
   userId      String
   propertyId  String
   unitId      String?
   contactId   String?
   title       String
   description String?
-  priority    Int      @default(1)  // 0=low, 1=medium, 2=high, 3=urgent
-  status      Int      @default(0)  // 0=open, 1=in_progress, 2=completed, 3=cancelled
-  category    String?  // plumbing, electrical, hvac, appliance, general, etc.
-  cost        Decimal? @db.Decimal(10, 2)
+  priority    MaintenancePriority @default(MEDIUM)
+  status      MaintenanceStatus   @default(OPEN)
+  category    String?
+  cost        Decimal?            @db.Decimal(10, 2)
   completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   property Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -332,7 +431,7 @@ model AutoPayConfig {
   leaseId               String   @unique
   contactId             String
   enabled               Boolean  @default(true)
-  paymentMethodType     String   @default("us_bank_account") // "us_bank_account" or "card"
+  paymentMethodType     String   @default("us_bank_account")
   stripePaymentMethodId String
   maxRetries            Int      @default(2)
   createdAt             DateTime @default(now())
@@ -345,7 +444,7 @@ model AutoPayConfig {
 model RentScheduleConfig {
   id         String  @id @default(cuid())
   userId     String  @unique
-  publishDay Int     @default(1)  // day of month to create rent charges (1-28)
+  publishDay Int     @default(1)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -356,11 +455,11 @@ model RentScheduleConfig {
 
 model TenantVerification {
   id         String   @id @default(cuid())
-  identifier String   // email or phone number
-  code       String   // 6-digit code
-  type       String   // "email" or "sms"
+  identifier String
+  code       String
+  type       String
   expiresAt  DateTime
-  attempts   Int      @default(0) // track failed attempts
+  attempts   Int      @default(0)
   createdAt  DateTime @default(now())
 
   @@index([identifier, code])
@@ -368,17 +467,20 @@ model TenantVerification {
 
 model Message {
   id        String   @id @default(cuid())
-  userId    String   // landlord
-  contactId String   // tenant contact
-  leaseId   String?  // optional lease context
+  userId    String
+  contactId String
+  leaseId   String?
   body      String
-  sender    String   // "landlord" or "tenant"
+  sender    String
   readAt    DateTime?
   createdAt DateTime @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
   lease   Lease?  @relation(fields: [leaseId], references: [id], onDelete: SetNull)
+
+  @@index([contactId])
+  @@index([leaseId])
 }
 
 // ── Lease Documents & E-Signatures ──
@@ -386,11 +488,11 @@ model Message {
 model LeaseDocument {
   id         String   @id @default(cuid())
   leaseId    String
-  userId     String   // landlord who uploaded
-  name       String   // original filename
-  fileType   String   // mime type (application/pdf, image/jpeg, etc.)
-  fileSize   Int      // bytes
-  filePath   String   // path on disk (uploads/<userId>/<id>.<ext>)
+  userId     String
+  name       String
+  fileType   String
+  fileSize   Int
+  filePath   String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -403,14 +505,14 @@ model LeaseDocument {
 model Signature {
   id          String    @id @default(cuid())
   documentId  String
-  contactId   String    // tenant who needs to sign
-  status      String    @default("pending") // pending, signed, declined
+  contactId   String
+  status      String    @default("pending")
   signedAt    DateTime?
   declinedAt  DateTime?
-  ipAddress   String?   // audit trail
-  userAgent   String?   // audit trail
-  signatureData String? // base64 PNG of drawn signature
-  signingToken  String  @unique @default(uuid()) // unique link for tenant
+  ipAddress   String?
+  userAgent   String?
+  signatureData String?
+  signingToken  String  @unique @default(uuid())
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -426,7 +528,7 @@ model Signature {
 model Team {
   id        String   @id @default(cuid())
   name      String
-  ownerId   String   // User who created the team
+  ownerId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -439,7 +541,7 @@ model TeamMember {
   id     String @id @default(cuid())
   teamId String
   userId String
-  role   String @default("viewer") // owner, manager, viewer, maintenance
+  role   String @default("viewer")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -455,7 +557,7 @@ model TeamInvite {
   email     String
   role      String    @default("viewer")
   token     String    @unique @default(uuid())
-  status    String    @default("pending") // pending, accepted, expired
+  status    String    @default("pending")
   expiresAt DateTime
   acceptedAt DateTime?
   createdAt DateTime  @default(now())
@@ -470,10 +572,10 @@ model TeamInvite {
 
 model ScreeningRequest {
   id          String   @id @default(cuid())
-  userId      String   // landlord
-  contactId   String   // tenant being screened
-  provider    String   @default("mock") // mock, transunion, checkr
-  status      String   @default("pending") // pending, consent_sent, processing, completed, failed, expired
+  userId      String
+  contactId   String
+  provider    String   @default("mock")
+  status      String   @default("pending")
   consentToken String  @unique @default(uuid())
   consentedAt  DateTime?
   completedAt  DateTime?
@@ -492,11 +594,11 @@ model ScreeningRequest {
 model ScreeningReport {
   id          String   @id @default(cuid())
   requestId   String
-  type        String   // credit, criminal, eviction
-  status      String   @default("clear") // clear, review, alert
-  score       Int?     // credit score (300-850)
-  summary     String?  // human-readable summary
-  details     Json?    // full report data
+  type        String
+  status      String   @default("clear")
+  score       Int?
+  summary     String?
+  details     Json?
   createdAt   DateTime @default(now())
 
   request ScreeningRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
@@ -506,8 +608,8 @@ model ScreeningReport {
 
 model CronJobLog {
   id          String    @id @default(cuid())
-  jobType     String    // "rent_generation", "auto_payment", "late_fee"
-  status      String    // "started", "completed", "failed"
+  jobType     String
+  status      String
   details     Json?
   startedAt   DateTime  @default(now())
   completedAt DateTime?
@@ -516,7 +618,7 @@ model CronJobLog {
 // ── Stripe Webhook Idempotency ──
 
 model WebhookEvent {
-  id          String   @id // Stripe event ID (evt_xxx)
+  id          String   @id
   type        String
   processedAt DateTime @default(now())
 
@@ -529,11 +631,11 @@ model NotificationLog {
   id        String   @id @default(cuid())
   userId    String
   contactId String
-  channel   String   // "email" or "sms"
-  type      String   // rent_reminder, rent_overdue, payment_received, etc.
-  status    String   // "sent", "failed", "bounced"
+  channel   String
+  type      String
+  status    String
   error     String?
-  recipient String   // email address or phone number
+  recipient String
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
@@ -542,13 +644,28 @@ model NotificationLog {
 
 model NotificationPreference {
   id           String   @id @default(cuid())
-  userId       String   // landlord who owns the contact
-  contactId    String   // tenant
+  userId       String
+  contactId    String
   emailEnabled Boolean  @default(true)
   smsEnabled   Boolean  @default(false)
-  disabledTypes Json    @default("[]") // array of NotificationType strings to suppress
+  disabledTypes Json    @default("[]")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@unique([userId, contactId], name: "userId_contactId")
+}
+
+// ── Audit Trail ──
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // CREATE, UPDATE, DELETE
+  entity    String   // Transaction, Lease, etc.
+  entityId  String
+  changes   Json?    // { field: { old: x, new: y } }
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entity, entityId])
 }

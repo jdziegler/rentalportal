@@ -209,7 +209,7 @@ export async function POST(req: Request) {
             where: { id: txn.id },
             data: {
               stripePaymentStatus: "processing",
-              status: 3, // PENDING
+              status: "PENDING",
             },
           });
         }

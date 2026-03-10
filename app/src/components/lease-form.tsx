@@ -16,12 +16,12 @@ interface LeaseFormProps {
   defaultValues?: {
     unitId?: string;
     contactId?: string;
-    leaseType?: number;
+    leaseType?: string;
     rentAmount?: number;
     rentDueDay?: number;
     gracePeriod?: number;
-    rentFrom?: string;
-    rentTo?: string;
+    startDate?: string;
+    endDate?: string;
     deposit?: number;
     name?: string;
     lateFeeEnabled?: boolean;
@@ -99,14 +99,14 @@ export function LeaseForm({
           <Label htmlFor="leaseType">Lease Type</Label>
           <Select
             name="leaseType"
-            defaultValue={String(defaultValues?.leaseType ?? 1)}
+            defaultValue={defaultValues?.leaseType ?? "FIXED"}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">Fixed</SelectItem>
-              <SelectItem value="2">Month-to-Month</SelectItem>
+              <SelectItem value="FIXED">Fixed</SelectItem>
+              <SelectItem value="MONTH_TO_MONTH">Month-to-Month</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -170,23 +170,23 @@ export function LeaseForm({
         </div>
 
         <div>
-          <Label htmlFor="rentFrom">Start Date *</Label>
+          <Label htmlFor="startDate">Start Date *</Label>
           <Input
-            id="rentFrom"
-            name="rentFrom"
+            id="startDate"
+            name="startDate"
             type="date"
             required
-            defaultValue={defaultValues?.rentFrom || ""}
+            defaultValue={defaultValues?.startDate || ""}
           />
         </div>
 
         <div>
-          <Label htmlFor="rentTo">End Date</Label>
+          <Label htmlFor="endDate">End Date</Label>
           <Input
-            id="rentTo"
-            name="rentTo"
+            id="endDate"
+            name="endDate"
             type="date"
-            defaultValue={defaultValues?.rentTo || ""}
+            defaultValue={defaultValues?.endDate || ""}
           />
         </div>
       </div>
