@@ -31,7 +31,7 @@ import { TRANSACTION_STATUS } from "@/lib/transaction-status";
 
 interface TransactionActionsProps {
   id: string;
-  status: number;
+  status: string;
   amount: number;
   paid: number;
   balance: number;
@@ -51,11 +51,13 @@ export function TransactionActions({
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
 
-  const canRecordPayment = status < TRANSACTION_STATUS.PAID && balance > 0;
-  const canMarkPaid = status < TRANSACTION_STATUS.PAID;
-  const canMarkPending = status <= TRANSACTION_STATUS.PAID;
-  const canWaive = status < TRANSACTION_STATUS.WAIVED;
-  const canVoid = status < TRANSACTION_STATUS.VOIDED;
+  const isTerminal = status === TRANSACTION_STATUS.WAIVED || status === TRANSACTION_STATUS.VOIDED;
+  const isPaid = status === TRANSACTION_STATUS.PAID;
+  const canRecordPayment = !isPaid && !isTerminal && balance > 0;
+  const canMarkPaid = !isPaid && !isTerminal;
+  const canMarkPending = !isTerminal && status !== TRANSACTION_STATUS.PENDING;
+  const canWaive = !isTerminal;
+  const canVoid = !isTerminal;
 
   function handleAction(action: () => Promise<void>) {
     startTransition(async () => {
@@ -120,7 +122,7 @@ export function TransactionActions({
           </Button>
         )}
 
-        {canMarkPending && status !== TRANSACTION_STATUS.PENDING && (
+        {canMarkPending && (
           <Button
             variant="outline"
             onClick={() => handleAction(() => markAsPending(id))}

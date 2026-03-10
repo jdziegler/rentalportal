@@ -46,7 +46,7 @@ export default async function TransactionDetailPage({
 
   const isIncome = transaction.category === "income";
   const amount = Number(transaction.amount);
-  const paid = Number(transaction.paid);
+  const paid = Number(transaction.paidAmount);
   const balance = Number(transaction.balance);
 
   return (

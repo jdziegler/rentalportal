@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { PropertyType } from "@prisma/client";
 
 async function getUserId() {
   const session = await auth();
@@ -18,7 +19,7 @@ export async function createProperty(formData: FormData) {
     data: {
       userId,
       name: formData.get("name") as string,
-      type: parseInt(formData.get("type") as string) || 2,
+      type: ((formData.get("type") as string) || "MULTI_FAMILY") as PropertyType,
       address: formData.get("address") as string,
       city: formData.get("city") as string,
       state: formData.get("state") as string,
@@ -41,7 +42,7 @@ export async function updateProperty(id: string, formData: FormData) {
     where: { id, userId },
     data: {
       name: formData.get("name") as string,
-      type: parseInt(formData.get("type") as string) || 2,
+      type: ((formData.get("type") as string) || "MULTI_FAMILY") as PropertyType,
       address: formData.get("address") as string,
       city: formData.get("city") as string,
       state: formData.get("state") as string,

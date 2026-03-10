@@ -18,7 +18,7 @@ interface UnitFormProps {
   defaultValues?: {
     name?: string;
     propertyId?: string;
-    type?: number;
+    type?: string;
     bedrooms?: number | null;
     bathrooms?: number | null;
     size?: number | null;
@@ -75,15 +75,15 @@ export function UnitForm({
           <Label htmlFor="type">Unit Type</Label>
           <Select
             name="type"
-            defaultValue={String(defaultValues?.type ?? 1)}
+            defaultValue={defaultValues?.type ?? "APARTMENT"}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">Apartment</SelectItem>
-              <SelectItem value="2">House</SelectItem>
-              <SelectItem value="3">Room</SelectItem>
+              <SelectItem value="APARTMENT">Apartment</SelectItem>
+              <SelectItem value="HOUSE">House</SelectItem>
+              <SelectItem value="ROOM">Room</SelectItem>
             </SelectContent>
           </Select>
         </div>

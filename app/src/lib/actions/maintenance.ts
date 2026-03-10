@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { sendNotification } from "@/lib/notifications";
+import type { MaintenancePriority, MaintenanceStatus } from "@prisma/client";
 
 async function getUserId() {
   const session = await auth();
@@ -33,7 +34,7 @@ export async function createMaintenanceRequest(formData: FormData) {
       contactId,
       title: formData.get("title") as string,
       description: (formData.get("description") as string) || null,
-      priority: (formData.get("priority") as string) || "MEDIUM",
+      priority: ((formData.get("priority") as string) || "MEDIUM") as MaintenancePriority,
       category: (formData.get("category") as string) || null,
     },
   });
@@ -53,7 +54,7 @@ export async function updateMaintenanceRequest(
     data: {
       title: formData.get("title") as string,
       description: (formData.get("description") as string) || null,
-      priority: (formData.get("priority") as string) || "MEDIUM",
+      priority: ((formData.get("priority") as string) || "MEDIUM") as MaintenancePriority,
       category: (formData.get("category") as string) || null,
       propertyId: formData.get("propertyId") as string,
       unitId: (formData.get("unitId") as string) || null,
@@ -90,7 +91,7 @@ export async function updateMaintenanceStatus(id: string, status: string) {
   await prisma.maintenanceRequest.update({
     where: { id, userId },
     data: {
-      status,
+      status: status as MaintenanceStatus,
       completedAt: status === "COMPLETED" ? new Date() : null,
     },
   });

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { TRANSACTION_STATUS } from "@/lib/transaction-status";
+import type { TransactionStatus } from "@prisma/client";
 import { recalcTransactionFromPayments } from "@/lib/payment-helpers";
 
 async function getUserId() {
@@ -18,7 +19,7 @@ export async function createTransaction(formData: FormData) {
 
   const amount = parseFloat(formData.get("amount") as string) || 0;
   const statusStr = formData.get("status") as string;
-  const status = statusStr || TRANSACTION_STATUS.UNPAID;
+  const status = (statusStr || TRANSACTION_STATUS.UNPAID) as TransactionStatus;
 
   const isPaid = status === TRANSACTION_STATUS.PAID;
 

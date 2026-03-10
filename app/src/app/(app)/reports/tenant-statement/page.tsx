@@ -92,7 +92,7 @@ export default async function TenantStatementPage({
     .reduce((s, t) => s + Number(t.amount), 0);
   const totalPaid = transactions
     .filter((t) => t.category === "income")
-    .reduce((s, t) => s + Number(t.paid), 0);
+    .reduce((s, t) => s + Number(t.paidAmount), 0);
   const totalBalance = totalCharged - totalPaid;
 
   return (
@@ -239,7 +239,7 @@ export default async function TenantStatementPage({
                         ${Number(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-6 py-3 text-right font-medium text-green-600">
-                        ${Number(t.paid).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ${Number(t.paidAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td className={`px-6 py-3 text-right font-medium ${Number(t.balance) > 0 ? "text-red-600" : "text-gray-900"}`}>
                         ${Number(t.balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}

@@ -39,14 +39,14 @@ export function PaymentHistory({
 }: {
   payments: PaymentRecord[];
   transactionId: string;
-  transactionStatus: number;
+  transactionStatus: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [deleteTarget, setDeleteTarget] = useState<PaymentRecord | null>(null);
 
   const canDelete =
-    transactionStatus < TRANSACTION_STATUS.WAIVED;
+    transactionStatus !== TRANSACTION_STATUS.WAIVED && transactionStatus !== TRANSACTION_STATUS.VOIDED;
 
   function handleDelete(payment: PaymentRecord) {
     startTransition(async () => {

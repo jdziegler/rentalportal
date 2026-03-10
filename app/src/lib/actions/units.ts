@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkPlanLimit } from "@/lib/subscription";
+import type { UnitType } from "@prisma/client";
 
 async function getUserId() {
   const session = await auth();
@@ -33,7 +34,7 @@ export async function createUnit(formData: FormData) {
     data: {
       propertyId,
       name: formData.get("name") as string,
-      type: parseInt(formData.get("type") as string) || 1,
+      type: ((formData.get("type") as string) || "APARTMENT") as UnitType,
       bedrooms: formData.get("bedrooms") ? parseInt(formData.get("bedrooms") as string) : null,
       bathrooms: formData.get("bathrooms") ? parseInt(formData.get("bathrooms") as string) : null,
       size: formData.get("size") ? parseInt(formData.get("size") as string) : null,
@@ -57,7 +58,7 @@ export async function updateUnit(id: string, formData: FormData) {
     data: {
       propertyId: formData.get("propertyId") as string,
       name: formData.get("name") as string,
-      type: parseInt(formData.get("type") as string) || 1,
+      type: ((formData.get("type") as string) || "APARTMENT") as UnitType,
       bedrooms: formData.get("bedrooms") ? parseInt(formData.get("bedrooms") as string) : null,
       bathrooms: formData.get("bathrooms") ? parseInt(formData.get("bathrooms") as string) : null,
       size: formData.get("size") ? parseInt(formData.get("size") as string) : null,

@@ -16,7 +16,7 @@ interface PropertyFormProps {
   action: (formData: FormData) => void;
   defaultValues?: {
     name?: string;
-    type?: number;
+    type?: string;
     address?: string;
     city?: string;
     state?: string;
@@ -52,15 +52,15 @@ export function PropertyForm({
           <Label htmlFor="type">Property Type</Label>
           <Select
             name="type"
-            defaultValue={String(defaultValues?.type ?? 2)}
+            defaultValue={defaultValues?.type ?? "MULTI_FAMILY"}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">Single Family</SelectItem>
-              <SelectItem value="2">Multi-Family</SelectItem>
-              <SelectItem value="3">Commercial</SelectItem>
+              <SelectItem value="SINGLE_FAMILY">Single Family</SelectItem>
+              <SelectItem value="MULTI_FAMILY">Multi-Family</SelectItem>
+              <SelectItem value="COMMERCIAL">Commercial</SelectItem>
             </SelectContent>
           </Select>
         </div>

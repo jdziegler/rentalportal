@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkPlanLimit } from "@/lib/subscription";
+import type { LeaseType } from "@prisma/client";
 
 async function getUserId() {
   const session = await auth();
@@ -21,7 +22,7 @@ export async function createLease(formData: FormData) {
   const startDate = new Date(formData.get("startDate") as string);
   const endDateRaw = formData.get("endDate") as string;
   const endDate = endDateRaw ? new Date(endDateRaw) : null;
-  const leaseType = (formData.get("leaseType") as string) || "FIXED";
+  const leaseType = ((formData.get("leaseType") as string) || "FIXED") as LeaseType;
   const rentDueDay = parseInt(formData.get("rentDueDay") as string) || 1;
   const gracePeriod = parseInt(formData.get("gracePeriod") as string) ?? 5;
   const depositRaw = formData.get("deposit") as string;
@@ -98,7 +99,7 @@ export async function updateLease(id: string, formData: FormData) {
   const startDate = new Date(formData.get("startDate") as string);
   const endDateRaw = formData.get("endDate") as string;
   const endDate = endDateRaw ? new Date(endDateRaw) : null;
-  const leaseType = (formData.get("leaseType") as string) || "FIXED";
+  const leaseType = ((formData.get("leaseType") as string) || "FIXED") as LeaseType;
   const rentDueDay = parseInt(formData.get("rentDueDay") as string) || 1;
   const gracePeriod = parseInt(formData.get("gracePeriod") as string) ?? 5;
   const depositRaw = formData.get("deposit") as string;

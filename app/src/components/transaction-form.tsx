@@ -113,15 +113,15 @@ export function TransactionForm({
           <Label htmlFor="status">Status</Label>
           <Select
             name="status"
-            defaultValue={defaultValues?.status || "0"}
+            defaultValue={defaultValues?.status || "UNPAID"}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0">Unpaid</SelectItem>
-              <SelectItem value="2">Paid</SelectItem>
-              <SelectItem value="3">Pending</SelectItem>
+              <SelectItem value="UNPAID">Unpaid</SelectItem>
+              <SelectItem value="PAID">Paid</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
             </SelectContent>
           </Select>
         </div>

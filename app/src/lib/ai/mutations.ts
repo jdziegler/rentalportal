@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { MutationOp } from "./conversation";
+import type { MaintenanceStatus, MaintenancePriority, LeaseStatus } from "@prisma/client";
 
 export interface MutationResult {
   op: string;
@@ -46,7 +47,7 @@ export async function executeMutations(
           await prisma.maintenanceRequest.update({
             where: { id: mut.id },
             data: {
-              status: statusVal,
+              status: statusVal as MaintenanceStatus,
               ...(statusVal === "COMPLETED" ? { completedAt: new Date() } : {}),
             },
           });
@@ -83,7 +84,7 @@ export async function executeMutations(
           }
           await prisma.maintenanceRequest.update({
             where: { id: mut.id },
-            data: { priority: prioVal },
+            data: { priority: prioVal as MaintenancePriority },
           });
           results.push({ op: mut.op, status: "ok" });
           break;
@@ -178,7 +179,7 @@ export async function executeMutations(
           }
           await prisma.lease.update({
             where: { id: mut.id },
-            data: { leaseStatus: statusVal },
+            data: { leaseStatus: statusVal as LeaseStatus },
           });
           results.push({ op: mut.op, status: "ok" });
           break;
