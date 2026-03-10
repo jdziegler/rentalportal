@@ -277,7 +277,7 @@ export default async function LeaseDetailPage({
                 <dd>
                   <Link
                     href={`/properties/${lease.unit.property.id}`}
-                    className="text-blue-600 hover:underline font-medium"
+                    className="text-gray-900 font-medium hover:text-indigo-600"
                   >
                     {propertyName}
                   </Link>
@@ -288,7 +288,7 @@ export default async function LeaseDetailPage({
                 <dd>
                   <Link
                     href={`/units/${lease.unit.id}`}
-                    className="text-blue-600 hover:underline font-medium"
+                    className="text-gray-900 font-medium hover:text-indigo-600"
                   >
                     {unitName}
                   </Link>
@@ -308,7 +308,7 @@ export default async function LeaseDetailPage({
                 <dd>
                   <Link
                     href={`/tenants/${lease.contact.id}`}
-                    className="text-blue-600 hover:underline font-medium"
+                    className="text-gray-900 font-medium hover:text-indigo-600"
                   >
                     {tenantName}
                   </Link>
@@ -367,7 +367,7 @@ export default async function LeaseDetailPage({
                       {t.date.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-3">
-                      <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline font-medium">
+                      <Link href={`/transactions/${t.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                         {t.details || "—"}
                       </Link>
                     </td>

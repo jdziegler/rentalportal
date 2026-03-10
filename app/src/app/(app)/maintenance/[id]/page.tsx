@@ -129,7 +129,7 @@ export default async function MaintenanceDetailPage({
               <dd>
                 <Link
                   href={`/properties/${request.property.id}`}
-                  className="text-blue-600 hover:underline"
+                  className="text-indigo-600 hover:underline"
                 >
                   {request.property.name}
                 </Link>
@@ -141,7 +141,7 @@ export default async function MaintenanceDetailPage({
                 <dd>
                   <Link
                     href={`/units/${request.unit.id}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-indigo-600 hover:underline"
                   >
                     {request.unit.name}
                   </Link>
@@ -154,7 +154,7 @@ export default async function MaintenanceDetailPage({
                 <dd>
                   <Link
                     href={`/tenants/${request.contact.id}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-indigo-600 hover:underline"
                   >
                     {request.contact.firstName} {request.contact.lastName}
                   </Link>

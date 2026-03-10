@@ -238,7 +238,7 @@ export default async function TransactionDetailPage({
                   {transaction.property ? (
                     <Link
                       href={`/properties/${transaction.property.id}`}
-                      className="text-blue-600 hover:underline font-medium"
+                      className="text-gray-900 font-medium hover:text-indigo-600"
                     >
                       {transaction.property.name}
                     </Link>
@@ -253,7 +253,7 @@ export default async function TransactionDetailPage({
                   <dd>
                     <Link
                       href={`/units/${transaction.unit.id}`}
-                      className="text-blue-600 hover:underline font-medium"
+                      className="text-gray-900 font-medium hover:text-indigo-600"
                     >
                       {transaction.unit.name}
                     </Link>
@@ -266,7 +266,7 @@ export default async function TransactionDetailPage({
                   {transaction.contact ? (
                     <Link
                       href={`/tenants/${transaction.contact.id}`}
-                      className="text-blue-600 hover:underline font-medium"
+                      className="text-gray-900 font-medium hover:text-indigo-600"
                     >
                       {transaction.contact.firstName}{" "}
                       {transaction.contact.lastName}

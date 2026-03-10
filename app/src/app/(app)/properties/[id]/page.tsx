@@ -188,7 +188,7 @@ export default async function PropertyDetailPage({
                       <td className="px-6 py-3">
                         <Link
                           href={`/units/${u.id}`}
-                          className="text-blue-600 hover:underline font-medium"
+                          className="text-gray-900 font-medium hover:text-indigo-600"
                         >
                           {u.name}
                         </Link>
@@ -215,7 +215,7 @@ export default async function PropertyDetailPage({
                         {activeLease ? (
                           <Link
                             href={`/tenants/${activeLease.contact.id}`}
-                            className="text-blue-600 hover:underline"
+                            className="text-indigo-600 hover:underline"
                           >
                             {activeLease.contact.firstName} {activeLease.contact.lastName}
                           </Link>
@@ -263,7 +263,7 @@ export default async function PropertyDetailPage({
                     <td className="px-6 py-3">
                       <Link
                         href={`/transactions/${t.id}`}
-                        className="text-blue-600 hover:underline font-medium"
+                        className="text-gray-900 font-medium hover:text-indigo-600"
                       >
                         {t.details || "—"}
                       </Link>
@@ -272,7 +272,7 @@ export default async function PropertyDetailPage({
                       {t.contact ? (
                         <Link
                           href={`/tenants/${t.contact.id}`}
-                          className="text-blue-600 hover:underline"
+                          className="text-indigo-600 hover:underline"
                         >
                           {t.contact.firstName} {t.contact.lastName}
                         </Link>

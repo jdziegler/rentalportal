@@ -72,7 +72,7 @@ export default async function ListingDetailPage({
             >
               {listing.isActive ? "Active" : "Inactive"}
             </Badge>
-            <span className="text-2xl font-bold text-blue-600">
+            <span className="text-2xl font-bold text-indigo-600">
               ${Number(listing.price).toFixed(0)}/mo
             </span>
           </div>
@@ -115,7 +115,7 @@ export default async function ListingDetailPage({
                 <dd>
                   <Link
                     href={`/properties/${listing.property.id}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-indigo-600 hover:underline"
                   >
                     {listing.property.name}
                   </Link>
@@ -126,7 +126,7 @@ export default async function ListingDetailPage({
                 <dd>
                   <Link
                     href={`/units/${listing.unit.id}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-indigo-600 hover:underline"
                   >
                     {listing.unit.name}
                   </Link>

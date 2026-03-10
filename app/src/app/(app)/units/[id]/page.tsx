@@ -79,7 +79,7 @@ export default async function UnitDetailPage({
           <p className="text-gray-600 mt-1">
             <Link
               href={`/properties/${unit.property.id}`}
-              className="text-blue-600 hover:underline"
+              className="text-indigo-600 hover:underline"
             >
               {unit.property.name}
             </Link>
@@ -180,7 +180,7 @@ export default async function UnitDetailPage({
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Tenant</dt>
                   <dd>
-                    <Link href={`/tenants/${activeLease.contactId}`} className="text-blue-600 hover:underline font-medium">
+                    <Link href={`/tenants/${activeLease.contactId}`} className="text-gray-900 font-medium hover:text-indigo-600">
                       {activeLease.contact.firstName} {activeLease.contact.lastName}
                     </Link>
                   </dd>
@@ -207,7 +207,7 @@ export default async function UnitDetailPage({
                 )}
               </dl>
               <div className="mt-4">
-                <Link href={`/leases/${activeLease.id}`} className="text-sm text-blue-600 hover:underline">
+                <Link href={`/leases/${activeLease.id}`} className="text-sm text-indigo-600 hover:underline">
                   View Lease →
                 </Link>
               </div>
@@ -249,13 +249,13 @@ export default async function UnitDetailPage({
                       {t.date.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-3">
-                      <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline font-medium">
+                      <Link href={`/transactions/${t.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                         {t.details || "\u2014"}
                       </Link>
                     </td>
                     <td className="px-6 py-3 text-gray-700">
                       {t.contact
-                        ? <Link href={`/tenants/${t.contact.id}`} className="text-blue-600 hover:underline font-medium">{t.contact.firstName} {t.contact.lastName}</Link>
+                        ? <Link href={`/tenants/${t.contact.id}`} className="text-gray-900 font-medium hover:text-indigo-600">{t.contact.firstName} {t.contact.lastName}</Link>
                         : "\u2014"}
                     </td>
                     <td

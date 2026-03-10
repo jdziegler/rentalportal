@@ -285,20 +285,20 @@ export default async function TenantDetailPage({
                   <tr key={lease.id} className="hover:bg-gray-50">
                     <td className="px-6 py-3">
                       {lease.unit?.property ? (
-                        <Link href={`/properties/${lease.unit.property.id}`} className="text-blue-600 hover:underline font-medium">
+                        <Link href={`/properties/${lease.unit.property.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                           {lease.unit.property.name}
                         </Link>
                       ) : "—"}
                     </td>
                     <td className="px-6 py-3">
                       {lease.unit ? (
-                        <Link href={`/units/${lease.unit.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/units/${lease.unit.id}`} className="text-indigo-600 hover:underline">
                           {lease.unit.name}
                         </Link>
                       ) : "—"}
                     </td>
                     <td className="px-6 py-3">
-                      <Link href={`/leases/${lease.id}`} className="text-blue-600 hover:underline font-medium">
+                      <Link href={`/leases/${lease.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                         ${Number(lease.rentAmount).toLocaleString()}
                       </Link>
                     </td>
@@ -356,7 +356,7 @@ export default async function TenantDetailPage({
                   </td>
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-2">
-                      <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline font-medium">
+                      <Link href={`/transactions/${t.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                         {t.details || "—"}
                       </Link>
                       {t.subcategory && (
@@ -368,11 +368,11 @@ export default async function TenantDetailPage({
                   </td>
                   <td className="px-6 py-3 text-gray-700">
                     {t.unit ? (
-                      <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                      <Link href={`/units/${t.unit.id}`} className="text-indigo-600 hover:underline">
                         {t.property?.name ? `${t.property.name} / ` : ""}{t.unit.name}
                       </Link>
                     ) : t.property ? (
-                      <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
+                      <Link href={`/properties/${t.propertyId}`} className="text-indigo-600 hover:underline">
                         {t.property.name}
                       </Link>
                     ) : "—"}
@@ -430,7 +430,7 @@ export default async function TenantDetailPage({
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2">
-                        <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline font-medium">
+                        <Link href={`/transactions/${t.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                           {t.details || "—"}
                         </Link>
                         {t.subcategory && (
@@ -442,11 +442,11 @@ export default async function TenantDetailPage({
                     </td>
                     <td className="px-6 py-3 text-gray-700">
                       {t.unit ? (
-                        <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/units/${t.unit.id}`} className="text-indigo-600 hover:underline">
                           {t.property?.name ? `${t.property.name} / ` : ""}{t.unit.name}
                         </Link>
                       ) : t.property ? (
-                        <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
+                        <Link href={`/properties/${t.propertyId}`} className="text-indigo-600 hover:underline">
                           {t.property.name}
                         </Link>
                       ) : "—"}
