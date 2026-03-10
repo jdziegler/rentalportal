@@ -113,17 +113,14 @@ export default async function LeasesPage({
   return (
     <div>
       <SetPageContext label="/Leases" context={`Leases list: ${totalCount} leases (page ${page}). User can see property/unit, tenant name, start/end dates, rent amount, and status.`} />
-      <div className="bg-white rounded-lg shadow-sm mb-6">
-        <div className="flex items-center justify-between px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Leases</h1>
-          <Button asChild>
-            <Link href="/leases/new">Add Lease</Link>
-          </Button>
-        </div>
-        <div className="border-t border-gray-200 px-6 py-4">
-          <ListFilters basePath="/leases" filters={filters} bare />
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Leases</h1>
+        <Button asChild>
+          <Link href="/leases/new">Add Lease</Link>
+        </Button>
       </div>
+
+      <ListFilters basePath="/leases" filters={filters} />
 
       {leases.length === 0 ? (
         <EmptyState

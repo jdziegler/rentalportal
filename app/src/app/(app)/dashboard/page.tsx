@@ -160,9 +160,7 @@ export default async function DashboardPage({
   return (
     <div>
       <SetPageContext label="/Dashboard" context={`Dashboard: ${propertyCount} properties, ${unitCount} units (${occupancyRate}% occupied), ${leaseCount} active leases, ${tenantCount} tenants. MTD income: $${income.toLocaleString()}, expenses: $${expenses.toLocaleString()}.`} />
-      <div className="bg-white rounded-lg shadow-sm px-6 py-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-      </div>
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">Dashboard</h1>
 
       {onboardingSteps && (
         <OnboardingChecklist steps={onboardingSteps} />

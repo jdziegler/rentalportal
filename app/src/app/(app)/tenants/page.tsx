@@ -115,17 +115,14 @@ export default async function TenantsPage({
   return (
     <div>
       <SetPageContext label="/Tenants" context={`Tenants list: ${tenants.length} tenants. User can see names, email, phone, status, and active leases.`} />
-      <div className="bg-white rounded-lg shadow-sm mb-6">
-        <div className="flex items-center justify-between px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
-          <Button asChild>
-            <Link href="/tenants/new">Add Tenant</Link>
-          </Button>
-        </div>
-        <div className="border-t border-gray-200 px-6 py-4">
-          <TenantFilters bare />
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
+        <Button asChild>
+          <Link href="/tenants/new">Add Tenant</Link>
+        </Button>
       </div>
+
+      <TenantFilters />
 
       {tenants.length === 0 ? (
         <EmptyState

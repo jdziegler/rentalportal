@@ -15,10 +15,9 @@ import { statusLabels } from "@/lib/transaction-status";
 
 interface TransactionFiltersProps {
   properties: { id: string; name: string }[];
-  bare?: boolean;
 }
 
-export function TransactionFilters({ properties, bare }: TransactionFiltersProps) {
+export function TransactionFilters({ properties }: TransactionFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -64,7 +63,8 @@ export function TransactionFilters({ properties, bare }: TransactionFiltersProps
   const hasFilters =
     category !== "all" || propertyId !== "all" || status !== "all" || dateRange !== "this_month";
 
-  const inner = (
+  return (
+    <div className="bg-white rounded-lg shadow p-4 mb-6">
       <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-end gap-3 md:gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Category</label>
@@ -175,13 +175,6 @@ export function TransactionFilters({ properties, bare }: TransactionFiltersProps
           </div>
         )}
       </div>
-  );
-
-  if (bare) return inner;
-
-  return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
-      {inner}
     </div>
   );
 }

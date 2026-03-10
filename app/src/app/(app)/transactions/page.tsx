@@ -185,56 +185,50 @@ export default async function TransactionsPage({
   return (
     <div>
       <SetPageContext label="/Transactions" context={`Transactions list: ${transactions.length} shown (page ${page}). Paid: $${totalPaid.toLocaleString()}, Outstanding: $${totalOutstanding.toLocaleString()}, Overdue: $${totalOverdue.toLocaleString()}. User can see date, details, property, tenant, status, amount, and balance.`} />
-      <div className="bg-white rounded-lg shadow-sm mb-6">
-        <div className="flex items-center justify-between px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" asChild>
-              <a
-                href={`/api/export/transactions?${new URLSearchParams(
-                  Object.fromEntries(
-                    Object.entries(params).filter(([, v]) => v != null) as [string, string][]
-                  )
-                ).toString()}`}
-              >
-                Export CSV
-              </a>
-            </Button>
-            <Button asChild>
-              <Link href="/transactions/new">Add Transaction</Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Totals Summary */}
-        <div className="border-t border-gray-200 px-6 py-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className="p-4 rounded-lg bg-gray-50">
-              <p className="text-sm text-gray-600">Paid</p>
-              <p className="text-2xl font-bold text-green-600">
-                ${totalPaid.toFixed(2)}
-              </p>
-            </div>
-            <div className="p-4 rounded-lg bg-gray-50">
-              <p className="text-sm text-gray-600">Outstanding</p>
-              <p className={`text-2xl font-bold ${totalOutstanding > 0 ? "text-orange-600" : "text-gray-600"}`}>
-                ${totalOutstanding.toFixed(2)}
-              </p>
-            </div>
-            <div className="p-4 rounded-lg bg-gray-50">
-              <p className="text-sm text-gray-600">Overdue</p>
-              <p className={`text-2xl font-bold ${totalOverdue > 0 ? "text-red-600" : "text-gray-600"}`}>
-                ${totalOverdue.toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="border-t border-gray-200 px-6 py-4">
-          <TransactionFilters properties={properties} bare />
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <a
+              href={`/api/export/transactions?${new URLSearchParams(
+                Object.fromEntries(
+                  Object.entries(params).filter(([, v]) => v != null) as [string, string][]
+                )
+              ).toString()}`}
+            >
+              Export CSV
+            </a>
+          </Button>
+          <Button asChild>
+            <Link href="/transactions/new">Add Transaction</Link>
+          </Button>
         </div>
       </div>
+
+      {/* Totals Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow p-4">
+          <p className="text-sm text-gray-600">Paid</p>
+          <p className="text-2xl font-bold text-green-600">
+            ${totalPaid.toFixed(2)}
+          </p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4">
+          <p className="text-sm text-gray-600">Outstanding</p>
+          <p className={`text-2xl font-bold ${totalOutstanding > 0 ? "text-orange-600" : "text-gray-600"}`}>
+            ${totalOutstanding.toFixed(2)}
+          </p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4">
+          <p className="text-sm text-gray-600">Overdue</p>
+          <p className={`text-2xl font-bold ${totalOverdue > 0 ? "text-red-600" : "text-gray-600"}`}>
+            ${totalOverdue.toFixed(2)}
+          </p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <TransactionFilters properties={properties} />
 
       {transactions.length === 0 ? (
         <EmptyState
