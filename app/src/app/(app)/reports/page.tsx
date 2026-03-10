@@ -38,15 +38,15 @@ export default async function ReportsPage() {
           <Link
             key={report.name}
             href={report.href}
-            className="bg-white rounded-lg shadow p-6 hover:ring-2 hover:ring-blue-200 transition-shadow group"
+            className="bg-white rounded-lg shadow p-6 hover:ring-2 hover:ring-indigo-200 transition-shadow group"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={report.icon} />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
+              <h2 className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600">
                 {report.name}
               </h2>
             </div>

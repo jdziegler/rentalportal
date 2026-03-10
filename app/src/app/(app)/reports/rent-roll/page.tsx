@@ -123,17 +123,17 @@ export default async function RentRollPage() {
                   return (
                     <tr key={l.id} className="hover:bg-gray-50">
                       <td className="px-6 py-3">
-                        <Link href={`/properties/${l.unit.property.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/properties/${l.unit.property.id}`} className="text-indigo-600 hover:underline">
                           {l.unit.property.name}
                         </Link>
                       </td>
                       <td className="px-6 py-3">
-                        <Link href={`/units/${l.unit.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/units/${l.unit.id}`} className="text-indigo-600 hover:underline">
                           {l.unit.name}
                         </Link>
                       </td>
                       <td className="px-6 py-3">
-                        <Link href={`/tenants/${l.contact.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/tenants/${l.contact.id}`} className="text-indigo-600 hover:underline">
                           {l.contact.firstName} {l.contact.lastName}
                         </Link>
                       </td>

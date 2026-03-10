@@ -256,7 +256,7 @@ function SigningPageInner() {
               href={`/api/sign/document?token=${token}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline text-sm font-medium"
+              className="text-gray-900 font-medium hover:text-indigo-600 text-sm"
             >
               View Document &rarr;
             </a>
@@ -295,7 +295,7 @@ function SigningPageInner() {
             <button
               onClick={handleSign}
               disabled={!hasSignature || submitting}
-              className="flex-1 bg-blue-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="flex-1 bg-indigo-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {submitting ? "Submitting..." : "Sign Document"}
             </button>

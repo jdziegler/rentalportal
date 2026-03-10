@@ -135,7 +135,7 @@ export default async function TenantStatementPage({
         </div>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700"
         >
           Generate
         </button>
@@ -222,13 +222,13 @@ export default async function TenantStatementPage({
                         {t.date.toLocaleDateString()}
                       </td>
                       <td className="px-6 py-3">
-                        <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/transactions/${t.id}`} className="text-indigo-600 hover:underline">
                           {t.details || "—"}
                         </Link>
                       </td>
                       <td className="px-6 py-3 text-gray-700">
                         {t.unit ? (
-                          <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                          <Link href={`/units/${t.unit.id}`} className="text-indigo-600 hover:underline">
                             {t.property?.name ? `${t.property.name} — ` : ""}{t.unit.name}
                           </Link>
                         ) : t.property?.name ? (

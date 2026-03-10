@@ -197,7 +197,7 @@ export default async function DashboardPage({
         <div className="bg-white rounded-lg shadow overflow-x-auto">
           <div className="flex items-center justify-between p-6 pb-4">
             <h2 className="text-lg font-semibold text-gray-900">Rent Due (Next 7 Days)</h2>
-            <Link href="/transactions" className="text-sm text-blue-600 hover:underline">
+            <Link href="/transactions" className="text-sm text-indigo-600">
               View All
             </Link>
           </div>
@@ -211,7 +211,7 @@ export default async function DashboardPage({
                   return (
                     <tr key={t.id} className="hover:bg-gray-50">
                       <td className="px-6 py-3">
-                        <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline font-medium">
+                        <Link href={`/transactions/${t.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                           {t.unit?.property?.name ? `${t.unit.property.name} — ${t.unit.name}` : t.details || "Rent"}
                         </Link>
                       </td>
@@ -247,7 +247,7 @@ export default async function DashboardPage({
         <div className="bg-white rounded-lg shadow overflow-x-auto">
           <div className="flex items-center justify-between p-6 pb-4">
             <h2 className="text-lg font-semibold text-gray-900">Overdue Balances</h2>
-            <Link href="/transactions" className="text-sm text-blue-600 hover:underline">
+            <Link href="/transactions" className="text-sm text-indigo-600">
               View All
             </Link>
           </div>
@@ -263,7 +263,7 @@ export default async function DashboardPage({
                     <tr key={o.contactId || "unknown"} className="hover:bg-gray-50">
                       <td className="px-6 py-3">
                         {contact ? (
-                          <Link href={`/tenants/${contact.id}`} className="text-blue-600 hover:underline font-medium">
+                          <Link href={`/tenants/${contact.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                             {contact.firstName} {contact.lastName}
                           </Link>
                         ) : (
@@ -285,7 +285,7 @@ export default async function DashboardPage({
         <div className="bg-white rounded-lg shadow overflow-x-auto">
           <div className="flex items-center justify-between p-6 pb-4">
             <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
-            <Link href="/transactions" className="text-sm text-blue-600 hover:underline">
+            <Link href="/transactions" className="text-sm text-indigo-600">
               View All
             </Link>
           </div>
@@ -302,7 +302,7 @@ export default async function DashboardPage({
                         {t.date.toLocaleDateString()}
                       </td>
                       <td className="px-6 py-3">
-                        <Link href={`/transactions/${t.id}`} className="text-blue-600 hover:underline">
+                        <Link href={`/transactions/${t.id}`} className="text-indigo-600 hover:underline">
                           {t.details || t.property?.name || "—"}
                         </Link>
                       </td>
@@ -321,7 +321,7 @@ export default async function DashboardPage({
         <div className="bg-white rounded-lg shadow overflow-x-auto">
           <div className="flex items-center justify-between p-6 pb-4">
             <h2 className="text-lg font-semibold text-gray-900">Leases Expiring Soon</h2>
-            <Link href="/leases" className="text-sm text-blue-600 hover:underline">
+            <Link href="/leases" className="text-sm text-indigo-600">
               View All
             </Link>
           </div>
@@ -337,7 +337,7 @@ export default async function DashboardPage({
                   return (
                     <tr key={l.id} className="hover:bg-gray-50">
                       <td className="px-6 py-3">
-                        <Link href={`/leases/${l.id}`} className="text-blue-600 hover:underline font-medium">
+                        <Link href={`/leases/${l.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
                           {l.unit.property.name} — {l.unit.name}
                         </Link>
                       </td>
@@ -411,7 +411,7 @@ function StatCard({
   );
   if (href) {
     return (
-      <Link href={href} className="hover:ring-2 hover:ring-blue-200 rounded-lg transition-shadow">
+      <Link href={href} className="hover:ring-2 hover:ring-indigo-200 rounded-lg transition-shadow">
         {content}
       </Link>
     );

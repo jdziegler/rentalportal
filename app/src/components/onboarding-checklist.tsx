@@ -27,7 +27,7 @@ export function OnboardingChecklist({
         <div className="mt-4 flex items-center gap-3">
           <div className="flex-1 bg-gray-100 rounded-full h-2.5">
             <div
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+              className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -85,7 +85,7 @@ export function OnboardingChecklist({
             {!step.completed && (
               <Link
                 href={step.href}
-                className="flex-shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors"
+                className="flex-shrink-0 text-xs font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors"
               >
                 {step.cta}
               </Link>

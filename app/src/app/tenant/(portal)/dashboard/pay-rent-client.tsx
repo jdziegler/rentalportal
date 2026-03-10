@@ -215,13 +215,13 @@ export default function PayRentClient({
             {/* ACH option */}
             <button
               onClick={() => handlePay("ach")}
-              className="border-2 border-gray-200 rounded-lg p-4 text-left hover:border-blue-400 hover:bg-blue-50 transition group"
+              className="border-2 border-gray-200 rounded-lg p-4 text-left hover:border-indigo-400 hover:bg-indigo-50 transition group"
             >
               <div className="flex items-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-gray-600 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <svg className="w-5 h-5 text-gray-600 group-hover:text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
                 </svg>
-                <span className="font-semibold text-gray-900 group-hover:text-blue-700">
+                <span className="font-semibold text-gray-900 group-hover:text-indigo-700">
                   Bank Transfer (ACH)
                 </span>
               </div>
@@ -237,13 +237,13 @@ export default function PayRentClient({
             {/* Card option */}
             <button
               onClick={() => handlePay("card")}
-              className="border-2 border-gray-200 rounded-lg p-4 text-left hover:border-blue-400 hover:bg-blue-50 transition group"
+              className="border-2 border-gray-200 rounded-lg p-4 text-left hover:border-indigo-400 hover:bg-indigo-50 transition group"
             >
               <div className="flex items-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-gray-600 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <svg className="w-5 h-5 text-gray-600 group-hover:text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                 </svg>
-                <span className="font-semibold text-gray-900 group-hover:text-blue-700">
+                <span className="font-semibold text-gray-900 group-hover:text-indigo-700">
                   Credit / Debit Card
                 </span>
               </div>

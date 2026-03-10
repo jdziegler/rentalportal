@@ -171,7 +171,7 @@ export default function LeaseDocuments({
                       href={`/api/documents/${doc.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                      className="text-sm text-gray-900 font-medium hover:text-indigo-600 truncate block"
                     >
                       {doc.name}
                     </a>

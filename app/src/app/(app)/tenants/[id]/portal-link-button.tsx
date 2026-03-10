@@ -53,7 +53,7 @@ export function PaymentLinkButton({ paymentToken }: { paymentToken: string | nul
   return (
     <button
       onClick={handleCopy}
-      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+      className="text-xs text-gray-900 font-medium hover:text-indigo-600"
     >
       {copied ? "Copied!" : "Copy payment link"}
     </button>
