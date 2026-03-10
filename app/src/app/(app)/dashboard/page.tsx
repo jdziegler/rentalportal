@@ -32,8 +32,6 @@ export default async function DashboardPage({
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-  const sevenDaysOut = new Date(now.getTime() + 7 * 86400000);
-
   const [
     propertyCount,
     unitCount,
@@ -46,7 +44,6 @@ export default async function DashboardPage({
     lastMonthExpenses,
     recentTransactions,
     expiringLeases,
-    upcomingRent,
     overdueBalances,
   ] = await Promise.all([
     prisma.property.count({ where: { userId, archivedAt: null } }),
@@ -90,21 +87,6 @@ export default async function DashboardPage({
         contact: { select: { firstName: true, lastName: true } },
       },
       orderBy: { endDate: "asc" },
-      take: 5,
-    }),
-    // Upcoming rent due in next 7 days
-    prisma.transaction.findMany({
-      where: {
-        userId,
-        category: "income",
-        status: "UNPAID",
-        date: { gte: now, lte: sevenDaysOut },
-      },
-      include: {
-        contact: { select: { id: true, firstName: true, lastName: true } },
-        unit: { select: { name: true, property: { select: { name: true } } } },
-      },
-      orderBy: { date: "asc" },
       take: 5,
     }),
     // Top 5 tenants with overdue balances
@@ -189,60 +171,10 @@ export default async function DashboardPage({
         />
       </div>
 
-      {/* Income & Expenses Chart */}
-      <div className="mb-8">
-        <IncomeChart data={chartData} range={chartRange} ranges={chartRanges} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Rent Due */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <div className="flex items-center justify-between p-6 pb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Rent Due (Next 7 Days)</h2>
-            <Link href="/transactions" className="text-sm text-indigo-600">
-              View All
-            </Link>
-          </div>
-          {upcomingRent.length === 0 ? (
-            <p className="px-6 pb-6 text-sm text-gray-500">No rent due in the next 7 days.</p>
-          ) : (
-            <table className="w-full text-sm">
-              <tbody className="divide-y divide-gray-100">
-                {upcomingRent.map((t) => {
-                  const daysUntil = Math.ceil((t.date.getTime() - now.getTime()) / 86400000);
-                  return (
-                    <tr key={t.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-3">
-                        <Link href={`/transactions/${t.id}`} className="text-gray-900 font-medium hover:text-indigo-600">
-                          {t.unit?.property?.name ? `${t.unit.property.name} — ${t.unit.name}` : t.details || "Rent"}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-3 text-gray-700">
-                        {t.contact ? `${t.contact.firstName} ${t.contact.lastName}` : "—"}
-                      </td>
-                      <td className="px-6 py-3 text-right font-medium text-gray-900">
-                        ${Number(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-6 py-3 text-right">
-                        <Badge
-                          variant="secondary"
-                          className={
-                            daysUntil <= 1
-                              ? "bg-red-100 text-red-700 hover:bg-red-100"
-                              : daysUntil <= 3
-                                ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-100"
-                          }
-                        >
-                          {daysUntil <= 0 ? "Today" : `${daysUntil}d`}
-                        </Badge>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Income & Expenses Chart */}
+        <div>
+          <IncomeChart data={chartData} range={chartRange} ranges={chartRanges} />
         </div>
 
         {/* Overdue Balances */}
