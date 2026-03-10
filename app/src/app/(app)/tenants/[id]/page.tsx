@@ -118,7 +118,7 @@ export default async function TenantDetailPage({
     },
     include: {
       property: { select: { id: true, name: true } },
-      unit: { select: { name: true } },
+      unit: { select: { id: true, name: true } },
       lease: { select: { gracePeriod: true } },
     },
     orderBy: { date: "desc" },
@@ -128,6 +128,7 @@ export default async function TenantDetailPage({
     where: { contactId: id, userId: session.user.id },
     include: {
       property: { select: { id: true, name: true } },
+      unit: { select: { id: true, name: true } },
     },
     orderBy: { date: "desc" },
     take: 5,
@@ -341,7 +342,7 @@ export default async function TenantDetailPage({
               <tr>
                 <th className="px-6 py-3 font-medium">Date</th>
                 <th className="px-6 py-3 font-medium">Details</th>
-                <th className="px-6 py-3 font-medium">Property</th>
+                <th className="px-6 py-3 font-medium">Property / Unit</th>
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium text-right">Amount</th>
                 <th className="px-6 py-3 font-medium text-right">Balance</th>
@@ -366,7 +367,11 @@ export default async function TenantDetailPage({
                     </div>
                   </td>
                   <td className="px-6 py-3 text-gray-700">
-                    {t.propertyId && t.property ? (
+                    {t.unit ? (
+                      <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                        {t.property?.name ? `${t.property.name} / ` : ""}{t.unit.name}
+                      </Link>
+                    ) : t.property ? (
                       <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
                         {t.property.name}
                       </Link>
@@ -409,6 +414,7 @@ export default async function TenantDetailPage({
               <tr>
                 <th className="px-6 py-3 font-medium">Date</th>
                 <th className="px-6 py-3 font-medium">Details</th>
+                <th className="px-6 py-3 font-medium">Property / Unit</th>
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium text-right">Amount</th>
                 <th className="px-6 py-3 font-medium text-right">Balance</th>
@@ -433,6 +439,17 @@ export default async function TenantDetailPage({
                           </Badge>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-3 text-gray-700">
+                      {t.unit ? (
+                        <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                          {t.property?.name ? `${t.property.name} / ` : ""}{t.unit.name}
+                        </Link>
+                      ) : t.property ? (
+                        <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
+                          {t.property.name}
+                        </Link>
+                      ) : "—"}
                     </td>
                     <td className="px-6 py-3">
                       <Badge

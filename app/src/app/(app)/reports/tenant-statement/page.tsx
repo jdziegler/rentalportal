@@ -5,22 +5,22 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { SetPageContext } from "@/components/set-page-context";
 
-const statusLabels: Record<number, string> = {
-  0: "Unpaid",
-  1: "Partial",
-  2: "Paid",
-  3: "Overpaid",
-  4: "Voided",
-  5: "Waived",
+const statusLabels: Record<string, string> = {
+  UNPAID: "Unpaid",
+  PARTIAL: "Partial",
+  PAID: "Paid",
+  PENDING: "Pending",
+  VOIDED: "Voided",
+  WAIVED: "Waived",
 };
 
-const statusColors: Record<number, string> = {
-  0: "bg-red-100 text-red-700",
-  1: "bg-yellow-100 text-yellow-700",
-  2: "bg-green-100 text-green-700",
-  3: "bg-blue-100 text-blue-700",
-  4: "bg-gray-100 text-gray-500",
-  5: "bg-gray-100 text-gray-500",
+const statusColors: Record<string, string> = {
+  UNPAID: "bg-red-100 text-red-700",
+  PARTIAL: "bg-yellow-100 text-yellow-700",
+  PAID: "bg-green-100 text-green-700",
+  PENDING: "bg-blue-100 text-blue-700",
+  VOIDED: "bg-gray-100 text-gray-500",
+  WAIVED: "bg-gray-100 text-gray-500",
 };
 
 export default async function TenantStatementPage({
@@ -61,7 +61,7 @@ export default async function TenantStatementPage({
         include: {
           payments: { orderBy: { date: "asc" } },
           property: { select: { name: true } },
-          unit: { select: { name: true } },
+          unit: { select: { id: true, name: true } },
         },
         orderBy: { date: "asc" },
       });
@@ -76,7 +76,7 @@ export default async function TenantStatementPage({
         include: {
           payments: { orderBy: { date: "asc" } },
           property: { select: { name: true } },
-          unit: { select: { name: true } },
+          unit: { select: { id: true, name: true } },
         },
         orderBy: { date: "asc" },
       });
@@ -227,8 +227,13 @@ export default async function TenantStatementPage({
                         </Link>
                       </td>
                       <td className="px-6 py-3 text-gray-700">
-                        {t.property?.name || ""}
-                        {t.unit?.name ? ` / ${t.unit.name}` : ""}
+                        {t.unit ? (
+                          <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                            {t.property?.name ? `${t.property.name} — ` : ""}{t.unit.name}
+                          </Link>
+                        ) : t.property?.name ? (
+                          t.property.name
+                        ) : "—"}
                       </td>
                       <td className="px-6 py-3">
                         <Badge variant="secondary" className={statusColors[t.status] || ""}>

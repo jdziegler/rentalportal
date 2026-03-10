@@ -149,7 +149,7 @@ export default async function LeasesPage({
                   <tr key={l.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <Link
-                        href={`/leases/${l.id}`}
+                        href={`/units/${l.unit.id}`}
                         className="text-blue-600 hover:underline font-medium"
                       >
                         {l.unit.property.name} — {l.unit.name}

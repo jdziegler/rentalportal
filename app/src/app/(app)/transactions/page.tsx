@@ -134,7 +134,7 @@ export default async function TransactionsPage({
     where,
     include: {
       property: { select: { name: true } },
-      unit: { select: { name: true } },
+      unit: { select: { id: true, name: true } },
       contact: { select: { firstName: true, lastName: true } },
     },
     orderBy: { date: "desc" },
@@ -278,14 +278,17 @@ export default async function TransactionsPage({
                         </div>
                       </td>
                       <td className="px-6 py-4 text-gray-700">
-                        {t.propertyId && t.property ? (
+                        {t.unit ? (
+                          <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                            {t.property?.name ? `${t.property.name} \u2014 ` : ""}{t.unit.name}
+                          </Link>
+                        ) : t.propertyId && t.property ? (
                           <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
                             {t.property.name}
                           </Link>
                         ) : (
                           "\u2014"
                         )}
-                        {t.unit ? ` \u2014 ${t.unit.name}` : ""}
                       </td>
                       <td className="px-6 py-4 text-gray-700">
                         {t.contactId && t.contact ? (
@@ -372,14 +375,17 @@ export default async function TransactionsPage({
                   </div>
                   {(t.property?.name || t.contact) && (
                     <div className="text-xs text-gray-500 mt-1 truncate">
-                      {t.propertyId && t.property ? (
+                      {t.unit ? (
+                        <Link href={`/units/${t.unit.id}`} className="text-blue-600 hover:underline">
+                          {t.property?.name ? `${t.property.name} \u2014 ` : ""}{t.unit.name}
+                        </Link>
+                      ) : t.propertyId && t.property ? (
                         <Link href={`/properties/${t.propertyId}`} className="text-blue-600 hover:underline">
                           {t.property.name}
                         </Link>
                       ) : (
                         t.property?.name || ""
                       )}
-                      {t.unit ? ` \u2014 ${t.unit.name}` : ""}
                       {t.contact && (
                         <>
                           {t.property?.name ? " \u2022 " : ""}

@@ -83,6 +83,7 @@ export default async function TenantsPage({
           id: true,
           unit: {
             select: {
+              id: true,
               name: true,
               property: { select: { name: true } },
             },
@@ -98,6 +99,7 @@ export default async function TenantsPage({
               id: true,
               unit: {
                 select: {
+                  id: true,
                   name: true,
                   property: { select: { name: true } },
                 },
@@ -184,10 +186,10 @@ export default async function TenantsPage({
                               <span key={l.id}>
                                 {i > 0 && ", "}
                                 <Link
-                                  href={`/leases/${l.id}`}
+                                  href={l.unit?.id ? `/units/${l.unit.id}` : `/leases/${l.id}`}
                                   className="text-blue-600 hover:underline text-xs"
                                 >
-                                  {l.unit?.property?.name || "?"} - {l.unit?.name || "?"}
+                                  {l.unit?.property?.name || "?"} — {l.unit?.name || "?"}
                                 </Link>
                               </span>
                             ))}
@@ -239,7 +241,7 @@ export default async function TenantsPage({
                       {allActiveLeases.map((l, i) => (
                         <span key={l.id}>
                           {i > 0 && ", "}
-                          {l.unit?.property?.name || "?"} - {l.unit?.name || "?"}
+                          {l.unit?.property?.name || "?"} — {l.unit?.name || "?"}
                         </span>
                       ))}
                     </div>
