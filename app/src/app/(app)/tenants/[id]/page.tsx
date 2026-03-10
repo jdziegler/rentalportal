@@ -124,8 +124,9 @@ export default async function TenantDetailPage({
   // Filter to actually overdue: past due + grace, OR late fees that are unpaid
   const today = new Date();
   const overdueTransactions = overdueCandidates.filter((t) => {
-    // Late fees are inherently overdue if unpaid
-    if (t.subcategory === "late_fee") return true;
+    // Late fees are inherently overdue if unpaid (check subcategory and details fallback)
+    const isLateFee = t.subcategory === "late_fee" || (t.details?.toLowerCase().includes("late fee") ?? false);
+    if (isLateFee) return true;
     // For other charges: past due date + grace period
     const grace = t.lease?.gracePeriod ?? 5;
     const dueDate = new Date(t.date);

@@ -313,6 +313,15 @@ async function syncAll(
 
     if (!propertyId) { stats.transactions.skipped++; continue; }
 
+    // Infer subcategory from TC data (TC sends subcategory: null)
+    const detailsText = ((a.details || a.name || '') as string).toLowerCase();
+    let subcategory: string | null = a.subcategory || null;
+    if (!subcategory) {
+      if (detailsText.includes('late fee')) subcategory = 'late_fee';
+      else if (detailsText.includes('deposit')) subcategory = 'deposit';
+      else if (detailsText.includes('rent')) subcategory = 'rent';
+    }
+
     const fields = {
       userId,
       propertyId,
@@ -320,6 +329,7 @@ async function syncAll(
       leaseId,
       contactId,
       category: a.category || 'income',
+      subcategory,
       amount: a.amount ?? 0,
       currency: a.currency || 'USD',
       date: new Date(a.date),
