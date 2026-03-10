@@ -9,7 +9,7 @@ export async function GET() {
   }
 
   const leases = await prisma.lease.findMany({
-    where: { userId: session.user.id, leaseStatus: 0 },
+    where: { userId: session.user.id, leaseStatus: "ACTIVE" },
     include: {
       unit: {
         select: {
@@ -35,7 +35,7 @@ export async function GET() {
       leaseId: { in: leaseIds },
       userId: session.user.id,
       category: "income",
-      status: { in: [0, 2] },
+      status: { in: ["UNPAID", "PARTIAL"] },
     },
     _sum: { balance: true },
   });
@@ -65,8 +65,8 @@ export async function GET() {
     csvEscape(l.contact.phone || ""),
     Number(l.rentAmount).toFixed(2),
     l.rentDueDay.toString(),
-    l.rentFrom.toISOString().split("T")[0],
-    l.rentTo ? l.rentTo.toISOString().split("T")[0] : "Month-to-Month",
+    l.startDate.toISOString().split("T")[0],
+    l.endDate ? l.endDate.toISOString().split("T")[0] : "Month-to-Month",
     (balanceMap.get(l.id) || 0).toFixed(2),
   ]);
 

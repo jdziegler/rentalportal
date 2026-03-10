@@ -14,7 +14,7 @@ export default async function TenantMaintenancePage() {
 
   // Get leases (for property/unit context when creating requests)
   const leases = await prisma.lease.findMany({
-    where: { contactId: { in: contactIds }, leaseStatus: 0 },
+    where: { contactId: { in: contactIds }, leaseStatus: "ACTIVE" },
     include: {
       unit: {
         include: {

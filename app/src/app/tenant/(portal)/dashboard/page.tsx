@@ -16,7 +16,7 @@ export default async function TenantPayPage() {
   const leases = await prisma.lease.findMany({
     where: {
       contactId: { in: contactIds },
-      leaseStatus: 0,
+      leaseStatus: "ACTIVE",
     },
     include: {
       unit: {
@@ -40,7 +40,7 @@ export default async function TenantPayPage() {
     select: {
       id: true,
       amount: true,
-      paid: true,
+      paidAmount: true,
       balance: true,
       status: true,
       date: true,
@@ -64,7 +64,7 @@ export default async function TenantPayPage() {
   const serializedTransactions = transactions.map((t) => ({
     id: t.id,
     amount: Number(t.amount),
-    paid: Number(t.paid),
+    paid: Number(t.paidAmount),
     balance: Number(t.balance),
     status: t.status,
     date: t.date.toISOString(),

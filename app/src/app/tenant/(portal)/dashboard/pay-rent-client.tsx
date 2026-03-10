@@ -19,20 +19,20 @@ interface TransactionInfo {
   amount: number;
   paid: number;
   balance: number;
-  status: number;
+  status: string;
   date: string;
   details: string | null;
   subcategory: string | null;
   leaseId: string | null;
 }
 
-const STATUS_LABELS: Record<number, { label: string; color: string }> = {
-  0: { label: "Unpaid", color: "bg-red-100 text-red-700" },
-  1: { label: "Paid", color: "bg-green-100 text-green-700" },
-  2: { label: "Partial", color: "bg-yellow-100 text-yellow-700" },
-  3: { label: "Pending", color: "bg-blue-100 text-blue-700" },
-  4: { label: "Waived", color: "bg-gray-100 text-gray-700" },
-  9: { label: "Voided", color: "bg-gray-100 text-gray-500" },
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  UNPAID: { label: "Unpaid", color: "bg-red-100 text-red-700" },
+  PAID: { label: "Paid", color: "bg-green-100 text-green-700" },
+  PARTIAL: { label: "Partial", color: "bg-yellow-100 text-yellow-700" },
+  PENDING: { label: "Pending", color: "bg-blue-100 text-blue-700" },
+  WAIVED: { label: "Waived", color: "bg-gray-100 text-gray-700" },
+  VOIDED: { label: "Voided", color: "bg-gray-100 text-gray-500" },
 };
 
 export default function PayRentClient({
@@ -65,7 +65,7 @@ export default function PayRentClient({
 
   const currentLease = leases.find((l) => l.id === selectedLease);
   const leaseTransactions = transactions.filter((t) => t.leaseId === selectedLease);
-  const unpaidTransactions = leaseTransactions.filter((t) => t.status === 0 || t.status === 2);
+  const unpaidTransactions = leaseTransactions.filter((t) => t.status === "UNPAID" || t.status === "PARTIAL");
   const totalOwed = unpaidTransactions.reduce((sum, t) => sum + t.balance, 0);
 
   function startPay(transactionId: string, amount: number) {
@@ -281,7 +281,7 @@ export default function PayRentClient({
         ) : (
           <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
             {leaseTransactions.map((t) => {
-              const status = STATUS_LABELS[t.status] || STATUS_LABELS[0];
+              const status = STATUS_LABELS[t.status] || STATUS_LABELS["UNPAID"];
               return (
                 <div key={t.id} className="px-4 py-3 flex items-center justify-between">
                   <div>
@@ -299,7 +299,7 @@ export default function PayRentClient({
                     <span className="text-sm font-medium text-gray-900">
                       ${t.amount.toFixed(2)}
                     </span>
-                    {(t.status === 0 || t.status === 2) && t.balance > 0 && (
+                    {(t.status === "UNPAID" || t.status === "PARTIAL") && t.balance > 0 && (
                       <button
                         onClick={() => startPay(t.id, t.balance)}
                         disabled={payingId !== null}

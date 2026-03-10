@@ -3,13 +3,13 @@ import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { getSubcategoryLabel } from "@/lib/transaction-categories";
 
-const statusLabels: Record<number, string> = {
-  0: "Unpaid",
-  1: "Partial",
-  2: "Paid",
-  3: "Overpaid",
-  4: "Voided",
-  5: "Waived",
+const statusLabels: Record<string, string> = {
+  UNPAID: "Unpaid",
+  PARTIAL: "Partial",
+  PAID: "Paid",
+  PENDING: "Pending",
+  VOIDED: "Voided",
+  WAIVED: "Waived",
 };
 
 export async function GET(request: NextRequest) {

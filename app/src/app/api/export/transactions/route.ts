@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildCSV, csvResponse, formatDate, formatCurrency } from "@/lib/export";
 import { getSubcategoryLabel } from "@/lib/transaction-categories";
 
-const STATUS_LABELS: Record<number, string> = {
-  0: "Unpaid", 1: "Partial", 2: "Paid", 3: "Voided", 4: "Waived",
+const STATUS_LABELS: Record<string, string> = {
+  UNPAID: "Unpaid", PARTIAL: "Partial", PAID: "Paid", PENDING: "Pending", VOIDED: "Voided", WAIVED: "Waived",
 };
 
 export async function GET(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const where: Record<string, unknown> = { userId: session.user.id };
   if (propertyId) where.propertyId = propertyId;
   if (category) where.category = category;
-  if (status) where.status = parseInt(status);
+  if (status) where.status = status;
 
   const dateFilter: Record<string, Date> = {};
   if (dateFrom) dateFilter.gte = new Date(dateFrom);
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     getSubcategoryLabel(t.subcategory) || "",
     t.details || "",
     formatCurrency(Number(t.amount)),
-    formatCurrency(Number(t.paid)),
+    formatCurrency(Number(t.paidAmount)),
     formatCurrency(Number(t.balance)),
     STATUS_LABELS[t.status] || "Unknown",
     t.paymentMethod || "",

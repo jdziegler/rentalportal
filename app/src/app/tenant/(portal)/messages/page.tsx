@@ -34,7 +34,7 @@ export default async function TenantMessagesPage() {
 
   // Get leases for context picker
   const leases = await prisma.lease.findMany({
-    where: { contactId: { in: contactIds }, leaseStatus: 0 },
+    where: { contactId: { in: contactIds }, leaseStatus: "ACTIVE" },
     include: {
       unit: {
         include: {

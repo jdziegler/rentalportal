@@ -33,7 +33,7 @@ export async function createMaintenanceRequest(formData: FormData) {
       contactId,
       title: formData.get("title") as string,
       description: (formData.get("description") as string) || null,
-      priority: parseInt(formData.get("priority") as string) || 1,
+      priority: (formData.get("priority") as string) || "MEDIUM",
       category: (formData.get("category") as string) || null,
     },
   });
@@ -53,7 +53,7 @@ export async function updateMaintenanceRequest(
     data: {
       title: formData.get("title") as string,
       description: (formData.get("description") as string) || null,
-      priority: parseInt(formData.get("priority") as string) || 1,
+      priority: (formData.get("priority") as string) || "MEDIUM",
       category: (formData.get("category") as string) || null,
       propertyId: formData.get("propertyId") as string,
       unitId: (formData.get("unitId") as string) || null,
@@ -66,14 +66,14 @@ export async function updateMaintenanceRequest(
   redirect(`/maintenance/${id}?toast=Request+updated`);
 }
 
-const MAINT_STATUS_LABELS: Record<number, string> = {
-  0: "Open",
-  1: "In Progress",
-  2: "Completed",
-  3: "Cancelled",
+const MAINT_STATUS_LABELS: Record<string, string> = {
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
-export async function updateMaintenanceStatus(id: string, status: number) {
+export async function updateMaintenanceStatus(id: string, status: string) {
   const userId = await getUserId();
 
   const request = await prisma.maintenanceRequest.findUnique({
@@ -91,7 +91,7 @@ export async function updateMaintenanceStatus(id: string, status: number) {
     where: { id, userId },
     data: {
       status,
-      completedAt: status === 2 ? new Date() : null,
+      completedAt: status === "COMPLETED" ? new Date() : null,
     },
   });
 

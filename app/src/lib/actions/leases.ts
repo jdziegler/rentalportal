@@ -18,10 +18,10 @@ export async function createLease(formData: FormData) {
   const unitId = formData.get("unitId") as string;
   const contactId = formData.get("contactId") as string;
   const rentAmount = parseFloat(formData.get("rentAmount") as string);
-  const rentFrom = new Date(formData.get("rentFrom") as string);
-  const rentToRaw = formData.get("rentTo") as string;
-  const rentTo = rentToRaw ? new Date(rentToRaw) : null;
-  const leaseType = parseInt(formData.get("leaseType") as string) || 1;
+  const startDate = new Date(formData.get("startDate") as string);
+  const endDateRaw = formData.get("endDate") as string;
+  const endDate = endDateRaw ? new Date(endDateRaw) : null;
+  const leaseType = (formData.get("leaseType") as string) || "FIXED";
   const rentDueDay = parseInt(formData.get("rentDueDay") as string) || 1;
   const gracePeriod = parseInt(formData.get("gracePeriod") as string) ?? 5;
   const depositRaw = formData.get("deposit") as string;
@@ -60,8 +60,8 @@ export async function createLease(formData: FormData) {
         rentAmount,
         rentDueDay,
         gracePeriod,
-        rentFrom,
-        rentTo,
+        startDate,
+        endDate,
         deposit,
         lateFeeEnabled,
         lateFeeType,
@@ -95,10 +95,10 @@ export async function updateLease(id: string, formData: FormData) {
   const unitId = formData.get("unitId") as string;
   const contactId = formData.get("contactId") as string;
   const rentAmount = parseFloat(formData.get("rentAmount") as string);
-  const rentFrom = new Date(formData.get("rentFrom") as string);
-  const rentToRaw = formData.get("rentTo") as string;
-  const rentTo = rentToRaw ? new Date(rentToRaw) : null;
-  const leaseType = parseInt(formData.get("leaseType") as string) || 1;
+  const startDate = new Date(formData.get("startDate") as string);
+  const endDateRaw = formData.get("endDate") as string;
+  const endDate = endDateRaw ? new Date(endDateRaw) : null;
+  const leaseType = (formData.get("leaseType") as string) || "FIXED";
   const rentDueDay = parseInt(formData.get("rentDueDay") as string) || 1;
   const gracePeriod = parseInt(formData.get("gracePeriod") as string) ?? 5;
   const depositRaw = formData.get("deposit") as string;
@@ -130,8 +130,8 @@ export async function updateLease(id: string, formData: FormData) {
       rentAmount,
       rentDueDay,
       gracePeriod,
-      rentFrom,
-      rentTo,
+      startDate,
+      endDate,
       deposit,
       lateFeeEnabled,
       lateFeeType,
@@ -160,7 +160,7 @@ export async function deleteLease(id: string) {
 
   // Check if the unit has any other active leases
   const otherActiveLeases = await prisma.lease.count({
-    where: { unitId: lease.unitId, leaseStatus: 0 },
+    where: { unitId: lease.unitId, leaseStatus: "ACTIVE" },
   });
 
   if (otherActiveLeases === 0) {
@@ -186,13 +186,13 @@ export async function renewLease(id: string) {
   // Expire the old lease
   await prisma.lease.update({
     where: { id },
-    data: { leaseStatus: 1 },
+    data: { leaseStatus: "EXPIRED" },
   });
 
   // Create the new lease starting from the old one's end date (or today)
-  const newStart = existing.rentTo || new Date();
-  const newEnd = existing.rentTo
-    ? new Date(new Date(existing.rentTo).setFullYear(new Date(existing.rentTo).getFullYear() + 1))
+  const newStart = existing.endDate || new Date();
+  const newEnd = existing.endDate
+    ? new Date(new Date(existing.endDate).setFullYear(new Date(existing.endDate).getFullYear() + 1))
     : null;
 
   const newLease = await prisma.lease.create({
@@ -207,8 +207,8 @@ export async function renewLease(id: string) {
       rentDueDay: existing.rentDueDay,
       gracePeriod: existing.gracePeriod,
       currency: existing.currency,
-      rentFrom: newStart,
-      rentTo: newEnd,
+      startDate: newStart,
+      endDate: newEnd,
       deposit: existing.deposit,
       lateFeeEnabled: existing.lateFeeEnabled,
       lateFeeType: existing.lateFeeType,
@@ -240,13 +240,13 @@ export async function terminateLease(id: string) {
 
   const lease = await prisma.lease.update({
     where: { id, userId },
-    data: { leaseStatus: 2 },
+    data: { leaseStatus: "TERMINATED" },
     select: { unitId: true },
   });
 
   // Check if the unit has any other active leases
   const otherActiveLeases = await prisma.lease.count({
-    where: { unitId: lease.unitId, leaseStatus: 0 },
+    where: { unitId: lease.unitId, leaseStatus: "ACTIVE" },
   });
 
   if (otherActiveLeases === 0) {

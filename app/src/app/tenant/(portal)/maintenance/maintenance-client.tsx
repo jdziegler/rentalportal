@@ -15,26 +15,26 @@ interface RequestInfo {
   id: string;
   title: string;
   description: string | null;
-  priority: number;
-  status: number;
+  priority: string;
+  status: string;
   category: string | null;
   propertyName: string;
   unitName: string | null;
   createdAt: string;
 }
 
-const PRIORITY_LABELS: Record<number, { label: string; color: string }> = {
-  0: { label: "Low", color: "bg-gray-100 text-gray-600" },
-  1: { label: "Medium", color: "bg-yellow-100 text-yellow-700" },
-  2: { label: "High", color: "bg-orange-100 text-orange-700" },
-  3: { label: "Urgent", color: "bg-red-100 text-red-700" },
+const PRIORITY_LABELS: Record<string, { label: string; color: string }> = {
+  LOW: { label: "Low", color: "bg-gray-100 text-gray-600" },
+  MEDIUM: { label: "Medium", color: "bg-yellow-100 text-yellow-700" },
+  HIGH: { label: "High", color: "bg-orange-100 text-orange-700" },
+  URGENT: { label: "Urgent", color: "bg-red-100 text-red-700" },
 };
 
-const STATUS_LABELS: Record<number, { label: string; color: string }> = {
-  0: { label: "Open", color: "bg-blue-100 text-blue-700" },
-  1: { label: "In Progress", color: "bg-yellow-100 text-yellow-700" },
-  2: { label: "Completed", color: "bg-green-100 text-green-700" },
-  3: { label: "Cancelled", color: "bg-gray-100 text-gray-500" },
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  OPEN: { label: "Open", color: "bg-blue-100 text-blue-700" },
+  IN_PROGRESS: { label: "In Progress", color: "bg-yellow-100 text-yellow-700" },
+  COMPLETED: { label: "Completed", color: "bg-green-100 text-green-700" },
+  CANCELLED: { label: "Cancelled", color: "bg-gray-100 text-gray-500" },
 };
 
 const CATEGORIES = [
@@ -63,7 +63,7 @@ export default function MaintenanceClient({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("general");
-  const [priority, setPriority] = useState(1);
+  const [priority, setPriority] = useState("MEDIUM");
   const [selectedLease, setSelectedLease] = useState(leases[0]?.id || "");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -100,7 +100,7 @@ export default function MaintenanceClient({
       setTitle("");
       setDescription("");
       setCategory("general");
-      setPriority(1);
+      setPriority("MEDIUM");
       setShowForm(false);
       router.refresh();
     } catch {
@@ -184,13 +184,13 @@ export default function MaintenanceClient({
               <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
               <select
                 value={priority}
-                onChange={(e) => setPriority(Number(e.target.value))}
+                onChange={(e) => setPriority(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               >
-                <option value={0}>Low</option>
-                <option value={1}>Medium</option>
-                <option value={2}>High</option>
-                <option value={3}>Urgent</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
               </select>
             </div>
           </div>
@@ -224,8 +224,8 @@ export default function MaintenanceClient({
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
           {requests.map((r) => {
-            const priority = PRIORITY_LABELS[r.priority] || PRIORITY_LABELS[1];
-            const status = STATUS_LABELS[r.status] || STATUS_LABELS[0];
+            const priority = PRIORITY_LABELS[r.priority] || PRIORITY_LABELS["MEDIUM"];
+            const status = STATUS_LABELS[r.status] || STATUS_LABELS["OPEN"];
             return (
               <div key={r.id} className="px-4 py-3">
                 <div className="flex items-start justify-between">

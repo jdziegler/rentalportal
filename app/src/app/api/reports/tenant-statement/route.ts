@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
     orderBy: { date: "asc" },
   });
 
-  const statusLabels: Record<number, string> = {
-    0: "Unpaid", 1: "Partial", 2: "Paid", 3: "Overpaid", 4: "Voided", 5: "Waived",
+  const statusLabels: Record<string, string> = {
+    UNPAID: "Unpaid", PARTIAL: "Partial", PAID: "Paid", PENDING: "Pending", VOIDED: "Voided", WAIVED: "Waived",
   };
 
   const headers = ["Date", "Description", "Category", "Property", "Unit", "Status", "Amount", "Paid", "Balance"];
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     csvEscape(t.unit?.name || ""),
     statusLabels[t.status] || "Unknown",
     Number(t.amount).toFixed(2),
-    Number(t.paid).toFixed(2),
+    Number(t.paidAmount).toFixed(2),
     Number(t.balance).toFixed(2),
   ]);
 

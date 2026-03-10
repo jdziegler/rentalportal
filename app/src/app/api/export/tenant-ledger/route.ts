@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildCSV, csvResponse, formatDate, formatCurrency } from "@/lib/export";
 import { getSubcategoryLabel } from "@/lib/transaction-categories";
 
-const STATUS_LABELS: Record<number, string> = {
-  0: "Unpaid", 1: "Partial", 2: "Paid", 3: "Voided", 4: "Waived",
+const STATUS_LABELS: Record<string, string> = {
+  UNPAID: "Unpaid", PARTIAL: "Partial", PAID: "Paid", PENDING: "Pending", VOIDED: "Voided", WAIVED: "Waived",
 };
 
 export async function GET(request: NextRequest) {
@@ -50,14 +50,14 @@ export async function GET(request: NextRequest) {
     getSubcategoryLabel(t.subcategory) || "",
     t.details || "",
     formatCurrency(Number(t.amount)),
-    formatCurrency(Number(t.paid)),
+    formatCurrency(Number(t.paidAmount)),
     formatCurrency(Number(t.balance)),
     STATUS_LABELS[t.status] || "Unknown",
   ]);
 
   // Add summary
   const totalCharged = transactions.reduce((s, t) => s + Number(t.amount), 0);
-  const totalPaid = transactions.reduce((s, t) => s + Number(t.paid), 0);
+  const totalPaid = transactions.reduce((s, t) => s + Number(t.paidAmount), 0);
   const totalBalance = transactions.reduce((s, t) => s + Number(t.balance), 0);
 
   rows.push([]);

@@ -18,7 +18,7 @@ export async function createTransaction(formData: FormData) {
 
   const amount = parseFloat(formData.get("amount") as string) || 0;
   const statusStr = formData.get("status") as string;
-  const status = statusStr ? parseInt(statusStr) : TRANSACTION_STATUS.UNPAID;
+  const status = statusStr || TRANSACTION_STATUS.UNPAID;
 
   const isPaid = status === TRANSACTION_STATUS.PAID;
 
@@ -36,7 +36,7 @@ export async function createTransaction(formData: FormData) {
       contactId: (formData.get("contactId") as string) || null,
       paymentMethod: (formData.get("paymentMethod") as string) || null,
       status,
-      paid: isPaid ? amount : 0,
+      paidAmount: isPaid ? amount : 0,
       balance: isPaid ? 0 : amount,
       paidAt: isPaid ? new Date() : null,
     },
@@ -100,7 +100,7 @@ export async function recordPayment(
     where: { id, userId },
   });
 
-  if (transaction.status >= TRANSACTION_STATUS.WAIVED) {
+  if (transaction.status === TRANSACTION_STATUS.WAIVED || transaction.status === TRANSACTION_STATUS.VOIDED) {
     throw new Error("Cannot record payment on waived or voided transaction");
   }
 
