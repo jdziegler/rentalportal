@@ -215,7 +215,7 @@ export default function MaintenanceClient({
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+              className="mt-2 text-sm text-indigo-600 hover:text-indigo-700"
             >
               Submit your first request
             </button>

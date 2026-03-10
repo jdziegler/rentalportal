@@ -146,7 +146,7 @@ function ConsentPageInner() {
               credit history, criminal records, and eviction history. You have the
               right to dispute any inaccurate information. A copy of your rights
               under the FCRA is available at{" "}
-              <span className="text-blue-600">
+              <span className="text-indigo-600">
                 consumer.ftc.gov
               </span>
               .

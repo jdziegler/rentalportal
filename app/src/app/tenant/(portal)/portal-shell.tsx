@@ -61,7 +61,7 @@ export default function TenantPortalShell({
                 href={item.href}
                 className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition ${
                   active
-                    ? "border-blue-600 text-blue-600"
+                    ? "border-indigo-600 text-indigo-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
