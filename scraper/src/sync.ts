@@ -58,14 +58,40 @@ async function downloadAll(api: TenantCloudAPI) {
     return data;
   };
 
-  return {
+  const result = {
     properties: await download('properties', () => api.getAllProperties()),
     units: await download('units', () => api.getAllUnits()),
     contacts: await download('contacts', () => api.getAllContacts()),
     leases: await download('leases', () => api.getAllLeases()),
     transactions: await download('transactions', () => api.getAllPages('/transactions')),
     listings: await download('listings', () => api.getAllPages('/listings')),
+    roommates: [] as Array<{ leaseId: string; primaryId: number; roommateIds: number[] }>,
   };
+
+  // Fetch roommates for active leases
+  console.log('    roommates...');
+  const activeLeases = result.leases.filter((l: any) => l.attributes?.lease_status === 0);
+  for (const lease of activeLeases) {
+    try {
+      const res = await api.get('/leases/' + lease.id + '?include=roommates');
+      const included = (res.included || []) as any[];
+      const roommates = included.filter((i: any) => i.type === 'lease_roommate');
+      if (roommates.length > 1) {
+        // Only store if there are actual co-tenants (more than just the primary)
+        result.roommates.push({
+          leaseId: lease.id,
+          primaryId: lease.attributes.user_client_id,
+          roommateIds: roommates.map((r: any) => r.attributes.user_client_id),
+        });
+      }
+    } catch {
+      // Skip if endpoint fails
+    }
+  }
+  fs.writeFileSync(path.join(DATA_DIR, 'roommates.json'), JSON.stringify(result.roommates, null, 2));
+  console.log(`      ${result.roommates.length} leases with co-tenants`);
+
+  return result;
 }
 
 function loadFromDisk() {
@@ -75,6 +101,12 @@ function loadFromDisk() {
     console.log(`    ${data.length} ${name}`);
     return data;
   };
+  const roommatesPath = path.join(DATA_DIR, 'roommates.json');
+  const roommates = fs.existsSync(roommatesPath)
+    ? JSON.parse(fs.readFileSync(roommatesPath, 'utf-8'))
+    : [];
+  if (roommates.length > 0) console.log(`    ${roommates.length} lease roommate entries`);
+
   return {
     properties: load('properties'),
     units: load('units'),
@@ -82,6 +114,7 @@ function loadFromDisk() {
     leases: load('leases'),
     transactions: load('transactions'),
     listings: load('listings'),
+    roommates,
   };
 }
 
@@ -89,7 +122,7 @@ function loadFromDisk() {
 
 async function syncAll(
   userId: string,
-  data: { properties: any[]; units: any[]; contacts: any[]; leases: any[]; transactions: any[]; listings: any[] },
+  data: { properties: any[]; units: any[]; contacts: any[]; leases: any[]; transactions: any[]; listings: any[]; roommates?: any[] },
   dryRun: boolean
 ) {
   console.log('\n  Syncing to PropertyPilot...\n');
@@ -302,6 +335,31 @@ async function syncAll(
     }
   }
   logStats('Leases', stats.leases);
+
+  // ── Roommates (co-tenants on leases) ──
+  if (data.roommates && !dryRun) {
+    console.log('    Roommates...');
+    let roommatesAdded = 0;
+    for (const entry of data.roommates) {
+      const leaseId = leaseMap.get(parseInt(entry.leaseId));
+      if (!leaseId) continue;
+
+      for (const rmTcId of entry.roommateIds) {
+        // Skip the primary tenant (already linked above)
+        if (rmTcId === entry.primaryId) continue;
+        const rmContactId = contactMap.get(rmTcId);
+        if (!rmContactId) continue;
+
+        await prisma.leaseTenant.upsert({
+          where: { leaseId_contactId: { leaseId, contactId: rmContactId } },
+          create: { leaseId, contactId: rmContactId, isPrimary: false },
+          update: {},
+        });
+        roommatesAdded++;
+      }
+    }
+    console.log(`      ${roommatesAdded} co-tenant links added`);
+  }
 
   // ── Transactions ──
   console.log('    Transactions...');
