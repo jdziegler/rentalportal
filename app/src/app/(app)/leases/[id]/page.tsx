@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DeleteLeaseButton } from "./delete-button";
-import { terminateLease, renewLease } from "@/lib/actions/leases";
+import { terminateLease } from "@/lib/actions/leases";
+import { RenewLeaseDialog } from "@/components/renew-lease-dialog";
 import { SetPageContext } from "@/components/set-page-context";
 import LeaseDocuments from "@/components/lease-documents";
 
@@ -50,6 +51,12 @@ export default async function LeaseDetailPage({
       contact: {
         select: { id: true, firstName: true, lastName: true, email: true, phone: true },
       },
+      previousLease: {
+        select: { id: true, startDate: true, endDate: true },
+      },
+      renewedLease: {
+        select: { id: true, startDate: true },
+      },
     },
   });
 
@@ -84,7 +91,6 @@ export default async function LeaseDetailPage({
   });
 
   const terminateWithId = terminateLease.bind(null, id);
-  const renewWithId = renewLease.bind(null, id);
 
   const leaseStatusLabel = leaseStatusLabels[lease.leaseStatus] ?? "Unknown";
 
@@ -121,11 +127,26 @@ export default async function LeaseDetailPage({
           </Button>
           {lease.leaseStatus === "ACTIVE" && (
             <>
-              <form action={renewWithId}>
-                <Button type="submit" variant="outline">
-                  Renew
-                </Button>
-              </form>
+              <RenewLeaseDialog
+                leaseId={id}
+                currentValues={{
+                  leaseType: lease.leaseType,
+                  rentAmount: Number(lease.rentAmount),
+                  rentDueDay: lease.rentDueDay,
+                  gracePeriod: lease.gracePeriod,
+                  startDate: lease.startDate.toISOString().split("T")[0],
+                  endDate: lease.endDate ? lease.endDate.toISOString().split("T")[0] : null,
+                  deposit: lease.deposit ? Number(lease.deposit) : null,
+                  lateFeeEnabled: lease.lateFeeEnabled,
+                  lateFeeType: lease.lateFeeType,
+                  lateFeeAmount: Number(lease.lateFeeAmount),
+                  lateFeeAccrual: lease.lateFeeAccrual,
+                  lateFeeMaxAmount: lease.lateFeeMaxAmount ? Number(lease.lateFeeMaxAmount) : null,
+                  notes: lease.notes,
+                }}
+                tenantName={tenantName}
+                unitLabel={`${propertyName} - ${unitName}`}
+              />
               <form action={terminateWithId}>
                 <Button type="submit" variant="outline">
                   Terminate
@@ -228,6 +249,32 @@ export default async function LeaseDetailPage({
               <dt className="text-gray-600">Currency</dt>
               <dd className="text-gray-900">{lease.currency}</dd>
             </div>
+            {lease.previousLease && (
+              <div className="flex justify-between">
+                <dt className="text-gray-600">Renewed From</dt>
+                <dd>
+                  <Link
+                    href={`/leases/${lease.previousLease.id}`}
+                    className="text-indigo-600 hover:text-indigo-800 font-medium"
+                  >
+                    Previous lease
+                  </Link>
+                </dd>
+              </div>
+            )}
+            {lease.renewedLease && (
+              <div className="flex justify-between">
+                <dt className="text-gray-600">Renewed As</dt>
+                <dd>
+                  <Link
+                    href={`/leases/${lease.renewedLease.id}`}
+                    className="text-indigo-600 hover:text-indigo-800 font-medium"
+                  >
+                    New lease
+                  </Link>
+                </dd>
+              </div>
+            )}
           </dl>
 
           {/* Late Fee Config */}

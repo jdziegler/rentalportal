@@ -176,7 +176,7 @@ export async function deleteLease(id: string) {
   redirect("/leases?toast=Lease+deleted");
 }
 
-export async function renewLease(id: string) {
+export async function renewLease(id: string, formData: FormData) {
   const userId = await getUserId();
 
   const existing = await prisma.lease.findUniqueOrThrow({
@@ -184,17 +184,31 @@ export async function renewLease(id: string) {
     include: { tenants: true },
   });
 
+  // Parse renewal form data
+  const leaseType = ((formData.get("leaseType") as string) || existing.leaseType) as LeaseType;
+  const rentAmount = parseFloat(formData.get("rentAmount") as string) || Number(existing.rentAmount);
+  const startDate = new Date(formData.get("startDate") as string || (existing.endDate || new Date()).toISOString());
+  const endDateRaw = formData.get("endDate") as string;
+  const endDate = endDateRaw ? new Date(endDateRaw) : null;
+  const rentDueDay = parseInt(formData.get("rentDueDay") as string) || existing.rentDueDay;
+  const gracePeriod = parseInt(formData.get("gracePeriod") as string) ?? existing.gracePeriod;
+  const depositRaw = formData.get("deposit") as string;
+  const deposit = depositRaw ? parseFloat(depositRaw) : existing.deposit;
+  const notes = (formData.get("notes") as string) || existing.notes;
+
+  // Late fee fields
+  const lateFeeEnabled = formData.get("lateFeeEnabled") === "on";
+  const lateFeeType = (formData.get("lateFeeType") as string) || existing.lateFeeType;
+  const lateFeeAmount = parseFloat(formData.get("lateFeeAmount") as string) || 0;
+  const lateFeeAccrual = (formData.get("lateFeeAccrual") as string) || existing.lateFeeAccrual;
+  const lateFeeMaxRaw = formData.get("lateFeeMaxAmount") as string;
+  const lateFeeMaxAmount = lateFeeMaxRaw ? parseFloat(lateFeeMaxRaw) : null;
+
   // Expire the old lease
   await prisma.lease.update({
     where: { id },
     data: { leaseStatus: "EXPIRED" },
   });
-
-  // Create the new lease starting from the old one's end date (or today)
-  const newStart = existing.endDate || new Date();
-  const newEnd = existing.endDate
-    ? new Date(new Date(existing.endDate).setFullYear(new Date(existing.endDate).getFullYear() + 1))
-    : null;
 
   const newLease = await prisma.lease.create({
     data: {
@@ -203,19 +217,21 @@ export async function renewLease(id: string) {
       unitId: existing.unitId,
       contactId: existing.contactId,
       name: existing.name,
-      leaseType: existing.leaseType,
-      rentAmount: existing.rentAmount,
-      rentDueDay: existing.rentDueDay,
-      gracePeriod: existing.gracePeriod,
+      leaseType,
+      rentAmount,
+      rentDueDay,
+      gracePeriod,
       currency: existing.currency,
-      startDate: newStart,
-      endDate: newEnd,
-      deposit: existing.deposit,
-      lateFeeEnabled: existing.lateFeeEnabled,
-      lateFeeType: existing.lateFeeType,
-      lateFeeAmount: existing.lateFeeAmount,
-      lateFeeAccrual: existing.lateFeeAccrual,
-      lateFeeMaxAmount: existing.lateFeeMaxAmount,
+      startDate,
+      endDate,
+      deposit,
+      notes,
+      previousLeaseId: id,
+      lateFeeEnabled,
+      lateFeeType,
+      lateFeeAmount,
+      lateFeeAccrual,
+      lateFeeMaxAmount,
     },
   });
 
