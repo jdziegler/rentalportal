@@ -44,6 +44,14 @@ export function PropertyForm({
     if (!file) return;
     setUploading(true);
     try {
+      // Delete old photo if replacing
+      if (photoUrl) {
+        await fetch("/api/upload", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: photoUrl }),
+        });
+      }
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
@@ -53,6 +61,17 @@ export function PropertyForm({
       }
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleRemovePhoto() {
+    if (photoUrl) {
+      await fetch("/api/upload", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: photoUrl }),
+      });
+      setPhotoUrl("");
     }
   }
 
@@ -88,7 +107,7 @@ export function PropertyForm({
               {photoUrl && (
                 <button
                   type="button"
-                  onClick={() => setPhotoUrl("")}
+                  onClick={handleRemovePhoto}
                   className="text-xs text-red-600 hover:text-red-700"
                 >
                   Remove
