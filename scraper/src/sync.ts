@@ -71,6 +71,11 @@ function mapRentPeriod(n: number): RentPeriod {
   return m[n] ?? "MONTHLY";
 }
 
+function mapPaymentMethod(n: number): string {
+  const m: Record<number, string> = { 1: "cash", 2: "check", 5: "money_order", 10: "other", 15: "ach", 17: "card" };
+  return m[n] ?? "other";
+}
+
 // Stats tracking
 const stats = {
   properties: { created: 0, updated: 0, skipped: 0 },
@@ -78,6 +83,7 @@ const stats = {
   contacts: { created: 0, updated: 0, skipped: 0 },
   leases: { created: 0, updated: 0, skipped: 0 },
   transactions: { created: 0, updated: 0, skipped: 0 },
+  payments: { created: 0, updated: 0, skipped: 0 },
   listings: { created: 0, updated: 0, skipped: 0 },
 };
 
@@ -101,6 +107,11 @@ async function downloadAll(api: TenantCloudAPI) {
     contacts: await download('contacts', () => api.getAllContacts()),
     leases: await download('leases', () => api.getAllLeases()),
     transactions: await download('transactions', () => api.getAllPages('/transactions')),
+    payments: await download('payments', () => api.getAllPages('/transactions/payments', {
+      'filter[is_refund]': false,
+      'fields[transaction_payment]': 'amount,currency,date,transaction_id,method,method_details,details,is_refund,status',
+      'sort': '-date,-id',
+    })),
     listings: await download('listings', () => api.getAllPages('/listings')),
     roommates: [] as Array<{ leaseId: string; primaryId: number; roommateIds: number[] }>,
   };
@@ -144,12 +155,19 @@ function loadFromDisk() {
     : [];
   if (roommates.length > 0) console.log(`    ${roommates.length} lease roommate entries`);
 
+  const paymentsPath = path.join(DATA_DIR, 'payments.json');
+  const payments = fs.existsSync(paymentsPath)
+    ? JSON.parse(fs.readFileSync(paymentsPath, 'utf-8'))
+    : [];
+  if (payments.length > 0) console.log(`    ${payments.length} payments`);
+
   return {
     properties: load('properties'),
     units: load('units'),
     contacts: load('contacts'),
     leases: load('leases'),
     transactions: load('transactions'),
+    payments,
     listings: load('listings'),
     roommates,
   };
@@ -159,7 +177,7 @@ function loadFromDisk() {
 
 async function syncAll(
   userId: string,
-  data: { properties: any[]; units: any[]; contacts: any[]; leases: any[]; transactions: any[]; listings: any[]; roommates?: any[] },
+  data: { properties: any[]; units: any[]; contacts: any[]; leases: any[]; transactions: any[]; payments: any[]; listings: any[]; roommates?: any[] },
   dryRun: boolean
 ) {
   console.log('\n  Syncing to PropertyPilot...\n');
@@ -473,6 +491,80 @@ async function syncAll(
   console.log('');
   logStats('Transactions', stats.transactions);
 
+  // ── Payments ──
+  console.log('    Payments...');
+  const totalPayments = data.payments.length;
+
+  // Build a lookup: TC transaction_id → PP transaction ID
+  // Query all transactions with tcId to avoid N+1 queries
+  const txnLookup = new Map<number, string>();
+  const allTxns = await prisma.transaction.findMany({
+    where: { userId, tcId: { not: null } },
+    select: { id: true, tcId: true },
+  });
+  for (const txn of allTxns) {
+    if (txn.tcId !== null) txnLookup.set(txn.tcId, txn.id);
+  }
+
+  for (let i = 0; i < totalPayments; i++) {
+    const p = data.payments[i];
+    const tcId = parseInt(p.id);
+    const a = p.attributes;
+
+    const transactionId = txnLookup.get(a.transaction_id);
+    if (!transactionId) { stats.payments.skipped++; continue; }
+
+    // Extract Stripe payment intent ID from method_details if present
+    let stripePaymentIntentId: string | null = null;
+    if (a.method_details && typeof a.method_details === 'string') {
+      const piMatch = a.method_details.match(/#?(pi_\w+)/);
+      if (piMatch) stripePaymentIntentId = piMatch[1];
+    }
+
+    const fields = {
+      transactionId,
+      amount: a.amount ?? 0,
+      date: new Date(a.date),
+      method: mapPaymentMethod(a.method ?? 10),
+      status: a.status || null,
+      note: a.details || null,
+      type: a.is_refund ? 'refund' : 'payment',
+    };
+
+    if (dryRun) {
+      const existing = await prisma.payment.findUnique({ where: { tcId } });
+      if (existing) stats.payments.updated++;
+      else stats.payments.created++;
+      continue;
+    }
+
+    // Only set stripePaymentIntentId if not already used by another payment
+    let safeStripeId = stripePaymentIntentId;
+    if (safeStripeId) {
+      const existing = await prisma.payment.findUnique({ where: { stripePaymentIntentId: safeStripeId } });
+      if (existing && existing.tcId !== tcId) safeStripeId = null;
+    }
+
+    const record = await prisma.payment.upsert({
+      where: { tcId },
+      create: { ...fields, tcId, stripePaymentIntentId: safeStripeId },
+      update: fields,
+    });
+
+    if (record.createdAt.getTime() === record.updatedAt.getTime()) {
+      stats.payments.created++;
+    } else {
+      stats.payments.updated++;
+    }
+
+    // Progress every 500
+    if ((i + 1) % 500 === 0 || i + 1 === totalPayments) {
+      process.stdout.write(`      ${i + 1}/${totalPayments}\r`);
+    }
+  }
+  console.log('');
+  logStats('Payments', stats.payments);
+
   // ── Listings ──
   console.log('    Listings...');
   for (const l of data.listings) {
@@ -595,6 +687,7 @@ async function main() {
     prisma.contact.count({ where: { userId } }),
     prisma.lease.count({ where: { userId } }),
     prisma.transaction.count({ where: { userId } }),
+    prisma.payment.count({ where: { transaction: { userId } } }),
     prisma.listing.count({ where: { userId } }),
   ]);
 
@@ -604,7 +697,8 @@ async function main() {
   console.log('    Contacts:     ', counts[2]);
   console.log('    Leases:       ', counts[3]);
   console.log('    Transactions: ', counts[4]);
-  console.log('    Listings:     ', counts[5]);
+  console.log('    Payments:     ', counts[5]);
+  console.log('    Listings:     ', counts[6]);
   console.log('');
 
   await prisma.$disconnect();
