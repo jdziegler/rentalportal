@@ -109,105 +109,74 @@ export default async function PropertiesPage({
           cta="Add Property"
         />
       ) : (
-        <>
-          <div className="hidden md:block bg-white rounded-lg shadow">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-gray-700">
-                <tr>
-                  <th className="px-6 py-3 font-medium">Name</th>
-                  <th className="px-6 py-3 font-medium">Address</th>
-                  <th className="px-6 py-3 font-medium">Type</th>
-                  <th className="px-6 py-3 font-medium">Units</th>
-                  <th className="px-6 py-3 font-medium">Occupancy</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {properties.map((p) => {
-                  const occupied = p.units.filter((u) => u.isRented).length;
-                  const total = p._count.units;
-                  const rate = total > 0 ? Math.round((occupied / total) * 100) : 0;
-                  return (
-                    <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <Link
-                          href={`/properties/${p.id}`}
-                          className="text-gray-900 font-medium hover:text-indigo-600"
-                        >
-                          {p.name}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 text-gray-700">
-                        {[p.address, p.city, p.state].filter(Boolean).join(", ")}
-                      </td>
-                      <td className="px-6 py-4 text-gray-700">
-                        {propertyTypes[p.type] || "Unknown"}
-                      </td>
-                      <td className="px-6 py-4 text-gray-700">{total}</td>
-                      <td className="px-6 py-4">
-                        {total > 0 ? (
-                          <Badge
-                            variant="secondary"
-                            className={
-                              rate === 100
-                                ? "bg-green-100 text-green-700 hover:bg-green-100"
-                                : rate > 0
-                                  ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
-                                  : "bg-gray-100 text-gray-700 hover:bg-gray-100"
-                            }
-                          >
-                            {rate}% ({occupied}/{total})
-                          </Badge>
-                        ) : (
-                          <span className="text-gray-500">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="md:hidden space-y-3">
-            {properties.map((p) => {
-              const occupied = p.units.filter((u) => u.isRented).length;
-              const total = p._count.units;
-              const rate = total > 0 ? Math.round((occupied / total) * 100) : 0;
-              return (
-                <Link
-                  key={p.id}
-                  href={`/properties/${p.id}`}
-                  className="block bg-white rounded-lg shadow p-4 active:bg-gray-50"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900 truncate">{p.name}</span>
-                    {total > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {properties.map((p) => {
+            const occupied = p.units.filter((u) => u.isRented).length;
+            const total = p._count.units;
+            const rate = total > 0 ? Math.round((occupied / total) * 100) : 0;
+            return (
+              <Link
+                key={p.id}
+                href={`/properties/${p.id}`}
+                className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden group"
+              >
+                {/* Photo */}
+                {p.photoUrl ? (
+                  <div className="h-40 overflow-hidden">
+                    <img
+                      src={p.photoUrl}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-40 bg-gray-100 flex items-center justify-center">
+                    <svg className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+                    </svg>
+                  </div>
+                )}
+
+                {/* Details */}
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors truncate">
+                      {p.name}
+                    </h3>
+                    {total > 0 && (
                       <Badge
                         variant="secondary"
                         className={
                           rate === 100
-                            ? "bg-green-100 text-green-700 hover:bg-green-100"
+                            ? "bg-green-100 text-green-700 shrink-0"
                             : rate > 0
-                              ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-100"
+                              ? "bg-yellow-100 text-yellow-700 shrink-0"
+                              : "bg-gray-100 text-gray-700 shrink-0"
                         }
                       >
-                        {rate}% ({occupied}/{total})
+                        {rate}%
                       </Badge>
-                    ) : (
-                      <span className="text-gray-500">—</span>
                     )}
                   </div>
-                  <div className="text-xs text-gray-500 truncate">
+                  <p className="text-sm text-gray-500 truncate mt-1">
                     {[p.address, p.city, p.state].filter(Boolean).join(", ")}
+                  </p>
+                  <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
+                    <span>{propertyTypes[p.type] || "Unknown"}</span>
+                    <span>&middot;</span>
+                    <span>{total} {total === 1 ? "unit" : "units"}</span>
+                    {total > 0 && (
+                      <>
+                        <span>&middot;</span>
+                        <span>{occupied} occupied</span>
+                      </>
+                    )}
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {propertyTypes[p.type] || "Unknown"} &middot; {p._count.units} units
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       )}
 
       <Pagination totalCount={totalCount} page={page} pageSize={pageSize} basePath="/properties" />

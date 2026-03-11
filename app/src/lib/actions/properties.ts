@@ -28,6 +28,7 @@ export async function createProperty(formData: FormData) {
       country: (formData.get("country") as string) || "US",
       year: (formData.get("year") as string) || null,
       description: (formData.get("description") as string) || null,
+      photoUrl: (formData.get("photoUrl") as string) || null,
     },
   });
 
@@ -51,6 +52,7 @@ export async function updateProperty(id: string, formData: FormData) {
       country: (formData.get("country") as string) || "US",
       year: (formData.get("year") as string) || null,
       description: (formData.get("description") as string) || null,
+      photoUrl: (formData.get("photoUrl") as string) || null,
     },
   });
 

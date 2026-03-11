@@ -51,6 +51,7 @@ export default async function EditPropertyPage({
             country: property.country || "US",
             year: property.year || "",
             description: property.description || "",
+            photoUrl: property.photoUrl || "",
           }}
           submitLabel="Save Changes"
         />

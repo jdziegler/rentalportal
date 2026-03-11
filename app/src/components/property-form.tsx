@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ interface PropertyFormProps {
     country?: string;
     year?: string;
     description?: string;
+    photoUrl?: string;
   };
   submitLabel: string;
 }
@@ -34,9 +36,69 @@ export function PropertyForm({
   defaultValues,
   submitLabel,
 }: PropertyFormProps) {
+  const [photoUrl, setPhotoUrl] = useState(defaultValues?.photoUrl || "");
+  const [uploading, setUploading] = useState(false);
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (res.ok) {
+        const { url } = await res.json();
+        setPhotoUrl(url);
+      }
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <form action={action} className="space-y-6 max-w-2xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Photo Upload */}
+        <div className="md:col-span-2">
+          <Label>Property Photo</Label>
+          <div className="mt-1 flex items-center gap-4">
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt="Property"
+                className="w-32 h-24 object-cover rounded-lg border border-gray-200"
+              />
+            ) : (
+              <div className="w-32 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-xs">
+                No photo
+              </div>
+            )}
+            <div className="flex flex-col gap-1">
+              <label className="cursor-pointer inline-flex items-center px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition">
+                {uploading ? "Uploading..." : "Upload Photo"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
+              </label>
+              {photoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setPhotoUrl("")}
+                  className="text-xs text-red-600 hover:text-red-700"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+          <input type="hidden" name="photoUrl" value={photoUrl} />
+        </div>
+
         <div className="md:col-span-2">
           <Label htmlFor="name">Property Name *</Label>
           <Input

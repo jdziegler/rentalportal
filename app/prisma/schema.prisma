@@ -161,6 +161,7 @@ model Property {
   lng         Float?
   yearBuilt   Int?
   description String?
+  photoUrl    String?
   amenities   Json         @default("[]")
   archivedAt  DateTime?
   createdAt   DateTime     @default(now())
