@@ -293,10 +293,31 @@ model Lease {
   autoPayConfig AutoPayConfig?
   messages      Message[]
   documents     LeaseDocument[]
+  rentIncreases RentIncrease[]
 
   @@index([userId, leaseStatus])
   @@index([unitId, leaseStatus])
   @@index([contactId])
+}
+
+model RentIncrease {
+  id            String   @id @default(cuid())
+  leaseId       String
+  userId        String
+  previousRent  Decimal  @db.Decimal(10, 2)
+  newRent       Decimal  @db.Decimal(10, 2)
+  effectiveDate DateTime
+  noticeDate    DateTime?
+  status        String   @default("SCHEDULED") // SCHEDULED, APPLIED, CANCELLED
+  notes         String?
+  appliedAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@index([leaseId])
+  @@index([userId, status])
 }
 
 model LeaseTenant {

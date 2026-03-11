@@ -8,8 +8,10 @@ import { Separator } from "@/components/ui/separator";
 import { DeleteLeaseButton } from "./delete-button";
 import { terminateLease } from "@/lib/actions/leases";
 import { RenewLeaseDialog } from "@/components/renew-lease-dialog";
+import { RentIncreaseDialog } from "@/components/rent-increase-dialog";
 import { SetPageContext } from "@/components/set-page-context";
 import LeaseDocuments from "@/components/lease-documents";
+import { RentIncreaseList } from "@/components/rent-increase-list";
 
 const leaseTypeLabels: Record<string, string> = {
   FIXED: "Fixed",
@@ -90,6 +92,12 @@ export default async function LeaseDetailPage({
     include: { contact: { select: { firstName: true, lastName: true } } },
   });
 
+  // Rent increases for this lease
+  const rentIncreases = await prisma.rentIncrease.findMany({
+    where: { leaseId: id },
+    orderBy: { effectiveDate: "desc" },
+  });
+
   const terminateWithId = terminateLease.bind(null, id);
 
   const leaseStatusLabel = leaseStatusLabels[lease.leaseStatus] ?? "Unknown";
@@ -127,6 +135,12 @@ export default async function LeaseDetailPage({
           </Button>
           {lease.leaseStatus === "ACTIVE" && (
             <>
+              <RentIncreaseDialog
+                leaseId={id}
+                currentRent={Number(lease.rentAmount)}
+                tenantName={tenantName}
+                unitLabel={`${propertyName} - ${unitName}`}
+              />
               <RenewLeaseDialog
                 leaseId={id}
                 currentValues={{
@@ -384,6 +398,9 @@ export default async function LeaseDetailPage({
         contactId={lease.contact.id}
         contactName={tenantName}
       />
+
+      {/* Rent Increases */}
+      <RentIncreaseList increases={rentIncreases} />
 
       {/* Recent Transactions */}
       {recentTransactions.length > 0 && (
