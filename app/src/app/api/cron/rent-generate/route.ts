@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyCronSecret } from "@/lib/cron-auth";
-import { generateRentCharges } from "@/lib/rent-automation";
+import { applyDueRentIncreases, generateRentCharges } from "@/lib/rent-automation";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
@@ -13,6 +13,9 @@ export async function POST(req: Request) {
   });
 
   try {
+    // Apply any due rent increases before generating charges
+    const increaseResult = await applyDueRentIncreases();
+
     const result = await generateRentCharges();
 
     await prisma.cronJobLog.update({
@@ -24,7 +27,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, rentIncreases: increaseResult });
   } catch (err) {
     await prisma.cronJobLog.update({
       where: { id: log.id },

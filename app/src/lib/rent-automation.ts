@@ -8,6 +8,54 @@ function toCents(value: number): number {
   return Math.round(value * 100);
 }
 
+// ── 0. Apply Due Rent Increases ──
+
+export interface RentIncreaseResult {
+  applied: number;
+  errors: string[];
+}
+
+/**
+ * Applies scheduled rent increases whose effective date has arrived.
+ * Should run before generating rent charges so the new amount is used.
+ */
+export async function applyDueRentIncreases(): Promise<RentIncreaseResult> {
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  const due = await prisma.rentIncrease.findMany({
+    where: {
+      status: "SCHEDULED",
+      effectiveDate: { lte: today },
+    },
+  });
+
+  let applied = 0;
+  const errors: string[] = [];
+
+  for (const ri of due) {
+    try {
+      await prisma.$transaction([
+        prisma.lease.update({
+          where: { id: ri.leaseId },
+          data: { rentAmount: ri.newRent },
+        }),
+        prisma.rentIncrease.update({
+          where: { id: ri.id },
+          data: { status: "APPLIED", appliedAt: new Date() },
+        }),
+      ]);
+      applied++;
+    } catch (err) {
+      errors.push(
+        `RentIncrease ${ri.id}: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
+
+  return { applied, errors };
+}
+
 // ── 1. Generate Rent Charges ──
 
 export interface RentGenerationResult {
